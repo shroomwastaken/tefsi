@@ -14,6 +14,7 @@ import (
 type UserService interface {
 	GetUserByID(ctx context.Context, id int) (*domain.User, error)
 	CreateUser(ctx context.Context, user *domain.User) error
+	GetUserCartByID(ctx context.Context, id int) ([]domain.Item, error)
 }
 
 // Обработчики HTTP запросов
@@ -62,4 +63,17 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+func (h *UserHandler) GetUserCartByID(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
 
+	cartID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	cartItems, err := h.service.GetUserCartByID(r.Context(), cartID)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(cartItems)
+}
