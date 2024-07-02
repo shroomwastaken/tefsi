@@ -40,6 +40,13 @@ func main() {
 	r.Get("/users/{id}", handler.GetUserByID)
 	r.Post("/users", handler.CreateUser)
 
+	item_repo := repositories.NewItemRepository(db)
+	item_service := services.NewDefaultItemService(item_repo)
+	item_handler := handlers.NewItemHandler(item_service)
+
+	r.Get("/item/{id}", item_handler.GetItemByID)
+	r.Post("/item", item_handler.CreateItem)
+
 	// Запуск HTTP сервера
 	log.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
