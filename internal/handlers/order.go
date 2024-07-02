@@ -80,7 +80,7 @@ func (h *OrderHandler) UpdateOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.UpdateOrder(r.Context(), order)
+	err = h.service.UpdateOrder(r.Context(), &order)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
