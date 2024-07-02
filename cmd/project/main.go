@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -15,8 +15,16 @@ import (
 )
 
 func main() {
+	postgresUser := "postgres"
+	postgresPassword := "password"
+	postgresDB := "postgres"    // Имя базы данных, которое вы хотите использовать
+	postgresHost := "localhost" // Хост базы данных
+	postgresPort := "5432"      // Порт базы данных
+
+	// Формирование строки соединения
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", postgresUser, postgresPassword, postgresHost, postgresPort, postgresDB)
 	// Подключение к базе данных
-	db, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	db, err := pgxpool.Connect(context.Background(), dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
