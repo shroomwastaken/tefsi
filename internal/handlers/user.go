@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi"
 
-	"hse_school/internal/domain"
+	"tefsi/internal/domain"
 )
 
 type UserService interface {

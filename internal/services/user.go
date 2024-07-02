@@ -3,12 +3,13 @@ package services
 import (
 	"context"
 
-	"hse_school/internal/domain"
+	"tefsi/internal/domain"
 )
 
 type UserRepository interface {
 	GetUserByID(ctx context.Context, id int) (*domain.User, error)
 	CreateUser(ctx context.Context, user *domain.User) error
+	GetUserCartByID(ctx context.Context, id int) (*domain.Cart, error)
 }
 
 // Реализация сервиса

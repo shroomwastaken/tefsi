@@ -5,7 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v4/pgxpool"
 
-	"hse_school/internal/domain"
+	"tefsi/internal/domain"
 )
 
 // Реализация репозитория

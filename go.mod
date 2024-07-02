@@ -1,4 +1,4 @@
-module hse_school
+module tefsi
 
 go 1.22
 
