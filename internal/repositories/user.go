@@ -31,3 +31,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) erro
 	_, err := r.db.Exec(ctx, "INSERT INTO users (name, email) VALUES ($1, $2)", user.Name, user.Email)
 	return err
 }
+
+func (h *UserRepository) GetUserCartByID(ctx context.Context, id int) ([]domain.Item, error) {
+	return make([]domain.Item, 0), nil // plug
+}
