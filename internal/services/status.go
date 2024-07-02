@@ -7,6 +7,6 @@ import (
 )
 
 type StatusRepository interface {
-	CreateStatus(ctx context.Context, status domain.Status) error
+	CreateStatus(ctx context.Context, status *domain.Status) error
 	GetStatusByID(ctx context.Context, id int) (*domain.Status, error)
 }
