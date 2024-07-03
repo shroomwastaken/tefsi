@@ -14,6 +14,13 @@ type UserRepository struct {
 }
 
 func NewUserRepository(db *pgxpool.Pool) *UserRepository {
+	sqlString := `CREATE TABLE users
+	(
+		id serial primary key,
+		name text,
+		email text
+	)`
+	db.Exec(context.Background(), sqlString)
 	return &UserRepository{db: db}
 }
 

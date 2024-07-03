@@ -12,6 +12,21 @@ type OrderRepository struct {
 }
 
 func NewOrderRepository(db *pgxpool.Pool) *OrderRepository {
+	sqlString := `CREATE TABLE statuses
+	(
+		id serial primary key,
+		title text
+	)`
+	db.Exec(context.Background(), sqlString)
+	sqlString = `CREATE TABLE items
+	(
+		id serial primary key,
+		status int,
+		user int,
+		FOREIGN KEY status REFERNCES statuses(id),
+		FOREIGN KEY user REFERNCES users(id)
+	)`
+	db.Exec(context.Background(), sqlString)
 	return &OrderRepository{db: db}
 }
 

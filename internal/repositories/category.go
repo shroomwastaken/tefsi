@@ -13,12 +13,18 @@ type CategoryRepository struct {
 }
 
 func NewCategoryRepository(db *pgxpool.Pool) *CategoryRepository {
+	sqlString := `CREATE TABLE categories
+	(
+		id serial primary key,
+		title text
+	)`
+	db.Exec(context.Background(), sqlString)
 	return &CategoryRepository{db: db}
 }
 
 func (r *CategoryRepository) GetCategoryByID(ctx context.Context, id int) (*domain.Category, error) {
 	category := &domain.Category{}
-	err := r.db.QueryRow(ctx, "SELECT id, title FROM items WHERE id = $1", id).Scan(&category.ID, &category.Title)
+	err := r.db.QueryRow(ctx, "SELECT id, title FROM categories WHERE id = $1", id).Scan(&category.ID, &category.Title)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +32,7 @@ func (r *CategoryRepository) GetCategoryByID(ctx context.Context, id int) (*doma
 }
 
 func (r *CategoryRepository) CreateCategory(ctx context.Context, category *domain.Category) error {
-	_, err := r.db.Exec(ctx, "INSERT INTO category (title) VALUES ($1)", category.Title)
+	_, err := r.db.Exec(ctx, "INSERT INTO categories (title) VALUES ($1)", category.Title)
 	return err
 }
 

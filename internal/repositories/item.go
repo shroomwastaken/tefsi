@@ -14,6 +14,16 @@ type ItemRepository struct {
 }
 
 func NewItemRepository(db *pgxpool.Pool) *ItemRepository {
+	sqlString := `CREATE TABLE items
+	(
+		id serial primary key,
+		title text,
+		description text,
+		price int,
+		category int,
+		FOREIGN KEY (category) REFERNCES category(id)
+	)`
+	db.Exec(context.Background(), sqlString)
 	return &ItemRepository{db: db}
 }
 
