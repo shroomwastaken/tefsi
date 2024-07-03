@@ -52,6 +52,11 @@ func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *dom
 
 	itemsRows, err := r.db.Query(ctx, itemsSQL, order.ID)
 
+	// TODO: proper error handling
+	if err != nil {
+		return "", nil, err
+	}
+
 	for itemsRows.Next() {
 		item := domain.Item{}
 		var amount int
