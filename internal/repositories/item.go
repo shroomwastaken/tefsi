@@ -18,7 +18,7 @@ func NewItemRepository(db *pgxpool.Pool) *ItemRepository {
 }
 
 func (r *ItemRepository) GetItemByID(ctx context.Context, id int) (*domain.Item, error) {
-	item := &domain.Item{}
+	item := domain.Item{}
 	sql_string := `SELECT items.id, items.title, items.description, items.price, items.category, categories.title
 	FROM items
 	JOIN categories ON items.category = categories.id
@@ -29,7 +29,7 @@ func (r *ItemRepository) GetItemByID(ctx context.Context, id int) (*domain.Item,
 	if err != nil {
 		return nil, err
 	}
-	return item, nil
+	return &item, nil
 }
 
 func (r *ItemRepository) CreateItem(ctx context.Context, item *domain.Item) error {
