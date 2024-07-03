@@ -21,7 +21,7 @@ func NewItemRepository(db *pgxpool.Pool) *ItemRepository {
 		description text,
 		price int,
 		category int,
-		FOREIGN KEY (category) REFERNCES category(id)
+		FOREIGN KEY (category) REFERENCES category(id)
 	)`
 	db.Exec(context.Background(), sqlString)
 	return &ItemRepository{db: db}
