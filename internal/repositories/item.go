@@ -23,11 +23,7 @@ func NewItemRepository(db *pgxpool.Pool) *ItemRepository {
 		category int,
 		FOREIGN KEY (category) REFERENCES categories(id)
 	)`
-	_, err := db.Exec(context.Background(), sqlString)
-	// TODO: error handling
-	if err != nil {
-		panic(err)
-	}
+	db.Exec(context.Background(), sqlString)
 	return &ItemRepository{db: db}
 }
 
