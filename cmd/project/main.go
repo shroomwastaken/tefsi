@@ -40,13 +40,21 @@ func main() {
 	r.Get("/users/{id}", handler.GetUserByID)
 	r.Post("/users", handler.CreateUser)
 
-	item_repo := repositories.NewItemRepository(db)
-	item_service := services.NewDefaultItemService(item_repo)
-	item_handler := handlers.NewItemHandler(item_service)
+	itemRepo := repositories.NewItemRepository(db)
+	itemService := services.NewDefaultItemService(itemRepo)
+	itemHandler := handlers.NewItemHandler(itemService)
 
-	r.Get("/item/{id}", item_handler.GetItemByID)
-	r.Post("/item", item_handler.CreateItem)
-	r.Get("/item/list", item_handler.GetItems)
+	r.Get("/item/{id}", itemHandler.GetItemByID)
+	r.Post("/item", itemHandler.CreateItem)
+	r.Get("/item/list", itemHandler.GetItems)
+
+	categoryRepo := repositories.NewCategoryRepository(db)
+	categoryService := services.NewDefaultCategoryService(categoryRepo)
+	categoryHandler := handlers.NewCategoryHandler(categoryService)
+
+	r.Get("/category/{id}", categoryHandler.GetCategoryByID)
+	r.Post("/category", categoryHandler.CreateCategory)
+	r.Get("/category/list", categoryHandler.GetCategories)
 
 	// Запуск HTTP сервера
 	log.Println("Starting server on :8080")
