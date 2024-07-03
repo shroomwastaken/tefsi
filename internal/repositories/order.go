@@ -19,6 +19,8 @@ func NewOrderRepository(db *pgxpool.Pool, all_tables *map[string]struct{}) (*Ord
                 id serial primary key,
                 title text
             )`
+			db.Exec(context.Background(), "INSERT INTO statuses (id, title) VALUES (1, 'in progress')")
+			db.Exec(context.Background(), "INSERT INTO statuses (id, title) VALUES (2, 'ready')")
 		_, err := db.Exec(context.Background(), sqlString)
 		if err != nil {
 			return nil, err
