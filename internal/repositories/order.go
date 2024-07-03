@@ -22,33 +22,30 @@ func NewOrderRepository(db *pgxpool.Pool) *OrderRepository {
 	(
 		id serial primary key,
 		status int,
-		user int,
+		user_id int,
 		FOREIGN KEY (status) REFERENCES statuses(id),
-		FOREIGN KEY (user) REFERENCES users(id)
+		FOREIGN KEY (user_id) REFERENCES users(id)
 	)`
-	_, err := db.Exec(context.Background(), sqlString)
-	if err != nil {
-		panic(err)
-	}
+	db.Exec(context.Background(), sqlString)
 	sqlString = `CREATE TABLE items_orders
     (
         id serial primary key,
         item int,
         amount int,
-        order int
+        order_id int
     )`
 	db.Exec(context.Background(), sqlString)
 	return &OrderRepository{db: db}
 }
 
 func (r *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) error {
-	orderSQL := "INSERT INTO orders (id, status, user) VALUES ($1, $2, $3)"
+	orderSQL := "INSERT INTO orders (id, status, user_id) VALUES ($1, $2, $3)"
 	_, err := r.db.Exec(ctx, orderSQL, order.ID, order.StatusID, order.UserID)
 	if err != nil {
 		return err
 	}
 
-	itemSQL := "INSERT into items_orders (item, order, amount) VALUES ($1, $2, $3)"
+	itemSQL := "INSERT into items_orders (item, order_id, amount) VALUES ($1, $2, $3)"
 
 	for i := range order.Items {
 		_, err := r.db.Exec(ctx, itemSQL, order.Items[i].ID, order.ID, order.Amounts[i])
@@ -80,7 +77,7 @@ func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *dom
     FROM items_orders
     JOIN items ON items.id = items_orders.item
     JOIN categories ON items.category = categories.id
-    WHERE items_orders.order = $1`
+    WHERE items_orders.order_id = $1`
 
 	itemsRows, err := r.db.Query(ctx, itemsSQL, order.ID)
 
@@ -109,7 +106,7 @@ func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *dom
 func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Order, error) {
 	order := domain.Order{}
 
-	sql_string := `SELECT orders.id, orders.status, orders.user
+	sql_string := `SELECT orders.id, orders.status, orders.user_id
     FROM orders
     WHERE orders.id = $1`
 
@@ -134,7 +131,7 @@ func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Ord
 func (r *OrderRepository) GetOrders(ctx context.Context) (*[]domain.Order, error) {
 	var orders []domain.Order
 
-	sqlString := "Select orders.id, orders.status, orders.user FROM orders"
+	sqlString := "Select orders.id, orders.status, orders.user_id FROM orders"
 
 	rows, err := r.db.Query(ctx, sqlString)
 	if err != nil {
@@ -165,7 +162,7 @@ func (r *OrderRepository) GetOrders(ctx context.Context) (*[]domain.Order, error
 
 func (r *OrderRepository) UpdateOrder(ctx context.Context, order *domain.Order) error {
 	ordersSQL := `UPDATE orders
-    SET orders.status = $1, orders.user = $2
+    SET orders.status = $1, orders.user_id = $2
     WHERE orders.id = $3`
 
 	_, err := r.db.Exec(ctx, ordersSQL, order.StatusID, order.StatusTitle, order.ID)
@@ -174,14 +171,14 @@ func (r *OrderRepository) UpdateOrder(ctx context.Context, order *domain.Order) 
 	}
 
 	deleteItemsSQL := `DELETE FROM items_orders
-    WHERE order = $1`
+    WHERE order_id = $1`
 
 	_, err = r.db.Exec(ctx, deleteItemsSQL, order.ID)
 	if err != nil {
 		return err
 	}
 
-	addItemSQL := "INSERT into items_orders (item, order, amount) VALUES ($1, $2, $3)"
+	addItemSQL := "INSERT into items_orders (item, order_id, amount) VALUES ($1, $2, $3)"
 
 	// for item, amount := range order.Items {
 	// 	_, err := r.db.Exec(ctx, addItemSQL, item.ID, order.ID, amount)
