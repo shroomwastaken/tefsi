@@ -14,11 +14,7 @@ type OrderService interface {
 	CreateOrder(ctx context.Context, order *domain.Order) error
 	GetOrderByID(ctx context.Context, id int) (*domain.Order, error)
 	UpdateOrder(ctx context.Context, order *domain.Order) error
-<<<<<<< HEAD
-	GetOrders(ctx context.Context) ([]domain.Order, error)
-=======
 	GetOrders(ctx context.Context) (*[]domain.Order, error)
->>>>>>> 57a03e945b9bb70b8d02c234c3e052a000fd803a
 }
 
 type OrderHandler struct {
