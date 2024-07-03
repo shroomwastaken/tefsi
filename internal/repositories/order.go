@@ -18,7 +18,7 @@ func NewOrderRepository(db *pgxpool.Pool) *OrderRepository {
 		title text
 	)`
 	db.Exec(context.Background(), sqlString)
-	sqlString = `CREATE TABLE items
+	sqlString = `CREATE TABLE orders
 	(
 		id serial primary key,
 		status int,
