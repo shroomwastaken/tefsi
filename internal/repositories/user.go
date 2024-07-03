@@ -13,15 +13,22 @@ type UserRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewUserRepository(db *pgxpool.Pool) *UserRepository {
-	sqlString := `CREATE TABLE users
-	(
-		id serial primary key,
-		name text,
-		email text
-	)`
-	db.Exec(context.Background(), sqlString)
-	return &UserRepository{db: db}
+func NewUserRepository(db *pgxpool.Pool, all_tables *map[string]struct{}) (*UserRepository, error) {
+	_, ok := (*all_tables)["users"]
+
+	if !ok {
+		sqlString := `CREATE TABLE users
+        (
+            id serial primary key,
+            name text,
+            email text
+        )`
+		_, err := db.Exec(context.Background(), sqlString)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &UserRepository{db: db}, nil
 }
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*domain.User, error) {
