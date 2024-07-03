@@ -129,6 +129,31 @@ func (r *OrderRepository) GetOrders(ctx context.Context) (*[]domain.Order, error
 }
 
 func (r *OrderRepository) UpdateOrder(ctx context.Context, order *domain.Order) error {
-	// TODO
+	ordersSQL := `UPDATE orders
+    SET orders.status = $1, orders.user = $2
+    WHERE orders.id = $3`
+
+	_, err := r.db.Exec(ctx, ordersSQL, order.StatusID, order.StatusTitle, order.ID)
+	if err != nil {
+		return err
+	}
+
+	deleteItemsSQL := `DELETE FROM items_orders
+    WHERE order = $1`
+
+	_, err = r.db.Exec(ctx, deleteItemsSQL, order.ID)
+	if err != nil {
+		return err
+	}
+
+	addItemSQL := "INSERT into items_orders (item, order, amount) VALUES ($1, $2, $3)"
+
+	for item, amount := range order.Items {
+		_, err := r.db.Exec(ctx, addItemSQL, item.ID, order.ID, amount)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
