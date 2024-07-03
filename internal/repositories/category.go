@@ -49,6 +49,8 @@ func (r *CategoryRepository) GetCategories(ctx context.Context) (*[]domain.Categ
 		if err != nil {
 			return nil, err
 		}
+
+		categories = append(categories, category)
 	}
 	return &categories, nil
 }
