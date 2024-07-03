@@ -1,0 +1,129 @@
+package repositories
+
+import (
+	"context"
+	"tefsi/internal/domain"
+
+	"github.com/jackc/pgx/v4/pgxpool"
+)
+
+type OrderRepository struct {
+	db *pgxpool.Pool
+}
+
+func NewOrderRepository(db *pgxpool.Pool) *OrderRepository {
+	return &OrderRepository{db: db}
+}
+
+func (r *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) error {
+	orderSQL := "INSERT into orders (id, status, user) VALUES ($1, $2, $3)"
+	_, err := r.db.Exec(ctx, orderSQL, order.ID, order.StatusID, order.UserID)
+
+	itemSQL := "INSERT into items_orders (item, order, amount) VALUES ($1, $2, $3)"
+
+	for item, amount := range order.Items {
+		_, err := r.db.Exec(ctx, itemSQL, item.ID, order.ID, amount)
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
+}
+
+// s dnem prikolov
+func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *domain.Order) (string, *map[*domain.Item]int, error) {
+	var statusTitle string
+	items := make(map[*domain.Item]int)
+	statusTitleSQL := `SELECT statuses.title
+    FROM statuses
+    WHERE id = $1`
+
+	err := r.db.QueryRow(ctx, statusTitleSQL, order.StatusID).Scan(&statusTitle)
+	if err != nil {
+		return "", nil, err
+	}
+
+	itemsSQL := `SELECT items.id, items.title, items.description, items.price, items.category, categories.title, items_orders.amount
+    FROM items_orders
+    JOIN items ON items.id = items_orders.item
+    JOIN categories ON items.category = categories.id
+    WHERE items_orders.order = $1`
+
+	itemsRows, err := r.db.Query(ctx, itemsSQL, order.ID)
+
+	for itemsRows.Next() {
+		item := domain.Item{}
+		var amount int
+
+		err := itemsRows.Scan(&item.ID, &item.Title, &item.Description, &item.Price, &item.CategoryID, &item.CategoryTitle, &amount)
+
+		if err != nil {
+			return "", nil, err
+		}
+
+		items[&item] = amount
+	}
+
+	return statusTitle, &items, nil
+}
+
+func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Order, error) {
+	order := domain.Order{}
+
+	sql_string := `SELECT orders.id, orders.status, orders.user
+    FROM orders
+    WHERE orders.id = $1`
+
+	err := r.db.QueryRow(ctx, sql_string, id).Scan(&order.ID, &order.StatusID, &order.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	statusTitle, items, err := r.getStatusTitleAndItems(ctx, &order)
+
+	if err != nil {
+		return nil, err
+	}
+
+	order.StatusTitle = statusTitle
+	order.Items = *items
+
+	return &order, nil
+}
+
+func (r *OrderRepository) GetOrders(ctx context.Context) (*[]domain.Order, error) {
+	var orders []domain.Order
+
+	sqlString := "Select orders.id, orders.status, orders.user FROM orders"
+
+	rows, err := r.db.Query(ctx, sqlString)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		order := domain.Order{}
+		err := rows.Scan(&order.ID, &order.StatusID, &order.UserID)
+		if err != nil {
+			return nil, err
+		}
+
+		statusTitle, items, err := r.getStatusTitleAndItems(ctx, &order)
+		if err != nil {
+			return nil, err
+		}
+
+		order.StatusTitle = statusTitle
+		order.Items = *items
+
+		orders = append(orders, order)
+	}
+
+	return &orders, nil
+}
+
+func (r *OrderRepository) UpdateOrder(ctx context.Context, order *domain.Order) error {
+	// TODO
+	return nil
+}
