@@ -12,14 +12,20 @@ type CategoryRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewCategoryRepository(db *pgxpool.Pool) *CategoryRepository {
-	sqlString := `CREATE TABLE categories
-	(
-		id serial primary key,
-		title text
-	)`
-	db.Exec(context.Background(), sqlString)
-	return &CategoryRepository{db: db}
+func NewCategoryRepository(db *pgxpool.Pool, all_tables *map[string]struct{}) (*CategoryRepository, error) {
+	_, ok := (*all_tables)["categories"]
+	if !ok {
+		sqlString := `CREATE TABLE categories
+		(
+			id serial primary key,
+			title text
+		)`
+		_, err := db.Exec(context.Background(), sqlString)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &CategoryRepository{db: db}, nil
 }
 
 func (r *CategoryRepository) GetCategoryByID(ctx context.Context, id int) (*domain.Category, error) {
