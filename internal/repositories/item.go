@@ -44,7 +44,7 @@ func (r *ItemRepository) GetItems(ctx context.Context, filter *domain.Filter) (*
 	FROM items
 	JOIN categories ON items.category = categories.id`
 	if filter.CategoryID != 0 {
-		sql_string += fmt.Sprintf("\nWHERE items.id = %d", filter.CategoryID)
+		sql_string += fmt.Sprintf("\nWHERE items.category = %d", filter.CategoryID)
 	}
 	rows, err := r.db.Query(ctx, sql_string)
 	if err != nil {
