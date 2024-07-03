@@ -56,6 +56,14 @@ func main() {
 	r.Post("/item", itemHandler.CreateItem)
 	r.Get("/item/list", itemHandler.GetItems)
 
+	orderRepo := repositories.NewOrderRepository(db)
+	orderService := services.NewDefaultOrderService(orderRepo)
+	orderHandler := handlers.NewOrderHandler(orderService)
+
+	r.Get("/order/{id}", orderHandler.GetOrderByID)
+	r.Post("/order", orderHandler.CreateOrder)
+	r.Get("/order/list", orderHandler.GetOrders)
+
 	// Запуск HTTP сервера
 	log.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
