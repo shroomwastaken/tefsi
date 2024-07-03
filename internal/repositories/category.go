@@ -12,8 +12,8 @@ type CategoryRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewCategoryRepository(db *pgxpool.Pool, all_tables *map[string]struct{}) (*CategoryRepository, error) {
-	_, ok := (*all_tables)["categories"]
+func NewCategoryRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*CategoryRepository, error) {
+	_, ok := (*allTables)["categories"]
 	if !ok {
 		sqlString := `CREATE TABLE categories
 		(

@@ -11,23 +11,23 @@ type OrderRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewOrderRepository(db *pgxpool.Pool, all_tables *map[string]struct{}) (*OrderRepository, error) {
-	_, ok := (*all_tables)["statuses"]
+func NewOrderRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*OrderRepository, error) {
+	_, ok := (*allTables)["statuses"]
 	if !ok {
 		sqlString := `CREATE TABLE statuses
             (
                 id serial primary key,
                 title text
             )`
-			db.Exec(context.Background(), "INSERT INTO statuses (id, title) VALUES (1, 'in progress')")
-			db.Exec(context.Background(), "INSERT INTO statuses (id, title) VALUES (2, 'ready')")
+		db.Exec(context.Background(), "INSERT INTO statuses (id, title) VALUES (1, 'in progress')")
+		db.Exec(context.Background(), "INSERT INTO statuses (id, title) VALUES (2, 'ready')")
 		_, err := db.Exec(context.Background(), sqlString)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	_, ok = (*all_tables)["orders"]
+	_, ok = (*allTables)["orders"]
 	if !ok {
 		sqlString := `CREATE TABLE orders
         (
@@ -43,7 +43,7 @@ func NewOrderRepository(db *pgxpool.Pool, all_tables *map[string]struct{}) (*Ord
 		}
 	}
 
-	_, ok = (*all_tables)["items_orders"]
+	_, ok = (*allTables)["items_orders"]
 	if !ok {
 		sqlString := `CREATE TABLE items_orders
         (
@@ -130,11 +130,11 @@ func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *dom
 func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Order, error) {
 	order := domain.Order{}
 
-	sql_string := `SELECT orders.id, orders.status, orders.user_id
+	sqlString := `SELECT orders.id, orders.status, orders.user_id
     FROM orders
     WHERE orders.id = $1`
 
-	err := r.db.QueryRow(ctx, sql_string, id).Scan(&order.ID, &order.StatusID, &order.UserID)
+	err := r.db.QueryRow(ctx, sqlString, id).Scan(&order.ID, &order.StatusID, &order.UserID)
 	if err != nil {
 		return nil, err
 	}

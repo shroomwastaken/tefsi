@@ -13,8 +13,8 @@ type UserRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewUserRepository(db *pgxpool.Pool, all_tables *map[string]struct{}) (*UserRepository, error) {
-	_, ok := (*all_tables)["users"]
+func NewUserRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*UserRepository, error) {
+	_, ok := (*allTables)["users"]
 
 	if !ok {
 		sqlString := `CREATE TABLE users

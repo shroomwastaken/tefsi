@@ -25,14 +25,14 @@ func GetAllTables(db *pgxpool.Pool) (map[string]struct{}, error) {
 	tables := make(map[string]struct{})
 
 	for rows.Next() {
-		var table_name string
-		err := rows.Scan(&table_name)
+		var tableName string
+		err := rows.Scan(&tableName)
 		if err != nil {
 			return nil, err
 		}
 
 		// tables = append(tables, table_name)
-		tables[table_name] = struct{}{}
+		tables[tableName] = struct{}{}
 	}
 
 	return tables, nil
@@ -54,13 +54,13 @@ func main() {
 	}
 	defer db.Close()
 
-	all_tables, err := GetAllTables(db)
+	allTables, err := GetAllTables(db)
 	if err != nil {
 		panic(err)
 	}
 
 	// Создание репозитория, сервиса и обработчиков
-	repo, err := repositories.NewUserRepository(db, &all_tables)
+	repo, err := repositories.NewUserRepository(db, &allTables)
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +72,7 @@ func main() {
 	r.Get("/users/{id}", handler.GetUserByID)
 	r.Post("/users", handler.CreateUser)
 
-	categoryRepo, err := repositories.NewCategoryRepository(db, &all_tables)
+	categoryRepo, err := repositories.NewCategoryRepository(db, &allTables)
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +83,7 @@ func main() {
 	r.Post("/category", categoryHandler.CreateCategory)
 	r.Get("/category/list", categoryHandler.GetCategories)
 
-	itemRepo, err := repositories.NewItemRepository(db, &all_tables)
+	itemRepo, err := repositories.NewItemRepository(db, &allTables)
 	if err != nil {
 		panic(err)
 	}
@@ -94,7 +94,7 @@ func main() {
 	r.Post("/item", itemHandler.CreateItem)
 	r.Get("/item/list", itemHandler.GetItems)
 
-	orderRepo, err := repositories.NewOrderRepository(db, &all_tables)
+	orderRepo, err := repositories.NewOrderRepository(db, &allTables)
 	if err != nil {
 		panic(err)
 	}
