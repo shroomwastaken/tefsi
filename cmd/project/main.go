@@ -60,7 +60,10 @@ func main() {
 	}
 
 	// Создание репозитория, сервиса и обработчиков
-	repo := repositories.NewUserRepository(db, &all_tables)
+	repo, err := repositories.NewUserRepository(db, &all_tables)
+	if err != nil {
+		panic(err)
+	}
 	service := services.NewDefaultUserService(repo)
 	handler := handlers.NewUserHandler(service)
 
@@ -69,7 +72,10 @@ func main() {
 	r.Get("/users/{id}", handler.GetUserByID)
 	r.Post("/users", handler.CreateUser)
 
-	categoryRepo := repositories.NewCategoryRepository(db, &all_tables)
+	categoryRepo, err := repositories.NewCategoryRepository(db, &all_tables)
+	if err != nil {
+		panic(err)
+	}
 	categoryService := services.NewDefaultCategoryService(categoryRepo)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
 
@@ -77,7 +83,10 @@ func main() {
 	r.Post("/category", categoryHandler.CreateCategory)
 	r.Get("/category/list", categoryHandler.GetCategories)
 
-	itemRepo := repositories.NewItemRepository(db, &all_tables)
+	itemRepo, err := repositories.NewItemRepository(db, &all_tables)
+	if err != nil {
+		panic(err)
+	}
 	itemService := services.NewDefaultItemService(itemRepo)
 	itemHandler := handlers.NewItemHandler(itemService)
 
@@ -85,7 +94,10 @@ func main() {
 	r.Post("/item", itemHandler.CreateItem)
 	r.Get("/item/list", itemHandler.GetItems)
 
-	orderRepo := repositories.NewOrderRepository(db, &all_tables)
+	orderRepo, err := repositories.NewOrderRepository(db, &all_tables)
+	if err != nil {
+		panic(err)
+	}
 	orderService := services.NewDefaultOrderService(orderRepo)
 	orderHandler := handlers.NewOrderHandler(orderService)
 
