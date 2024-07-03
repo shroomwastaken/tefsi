@@ -13,18 +13,26 @@ type ItemRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewItemRepository(db *pgxpool.Pool) *ItemRepository {
-	sqlString := `CREATE TABLE items
-	(
-		id serial primary key,
-		title text,
-		description text,
-		price int,
-		category int,
-		FOREIGN KEY (category) REFERENCES categories(id)
-	)`
-	db.Exec(context.Background(), sqlString)
-	return &ItemRepository{db: db}
+func NewItemRepository(db *pgxpool.Pool, all_tables *map[string]struct{}) (*ItemRepository, error) {
+	_, ok := (*all_tables)["items"]
+
+	if !ok {
+		sqlString := `CREATE TABLE items
+        (
+            id serial primary key,
+            title text,
+            description text,
+            price int,
+            category int,
+            FOREIGN KEY (category) REFERENCES categories(id)
+        )`
+
+		_, err := db.Exec(context.Background(), sqlString)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &ItemRepository{db: db}, nil
 }
 
 func (r *ItemRepository) GetItemByID(ctx context.Context, id int) (*domain.Item, error) {
