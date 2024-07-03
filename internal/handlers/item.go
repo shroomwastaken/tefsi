@@ -13,7 +13,7 @@ import (
 type ItemService interface {
 	CreateItem(ctx context.Context, item *domain.Item) error
 	GetItemByID(ctx context.Context, id int) (*domain.Item, error)
-	// GetItems(ctx context.Context, filter domain.Filter) ([]domain.Item, error)
+	GetItems(ctx context.Context, filter *domain.Filter) (*[]domain.Item, error)
 }
 
 type ItemHandler struct {
@@ -60,23 +60,31 @@ func (h *ItemHandler) GetItemByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(item)
 }
 
-// func (h *ItemHandler) GetItems(w http.ResponseWriter, r *http.Request) {
-// 	categoryID := chi.URLParam(r, "category")
-// 	_ = categoryID
+func (h *ItemHandler) GetItems(w http.ResponseWriter, r *http.Request) {
+	categoryIDString := chi.URLParam(r, "category")
+	var categoryID int
+	if categoryIDString != "" {
+		var err error
+		categoryID, err = strconv.Atoi(categoryIDString)
 
-// 	// TODO: get category from ID
-// 	var category domain.Category
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		categoryID = 0
+	}
 
-// 	filter := domain.Filter{
-// 		Category: category,
-// 	}
+	filter := domain.Filter{
+		CategoryID: categoryID,
+	}
 
-// 	itemList, err := h.service.GetItems(r.Context(), filter)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	itemList, err := h.service.GetItems(r.Context(), &filter)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(itemList)
-// }
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(*itemList)
+}

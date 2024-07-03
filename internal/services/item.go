@@ -9,7 +9,7 @@ import (
 type ItemRepository interface {
 	CreateItem(ctx context.Context, item *domain.Item) error
 	GetItemByID(ctx context.Context, id int) (*domain.Item, error)
-	// GetItems(ctx context.Context, filter domain.Filter) ([]domain.Item, error)
+	GetItems(ctx context.Context, filter *domain.Filter) (*[]domain.Item, error)
 }
 
 type ItemService struct {
@@ -26,4 +26,8 @@ func (s *ItemService) GetItemByID(ctx context.Context, id int) (*domain.Item, er
 
 func (s *ItemService) CreateItem(ctx context.Context, item *domain.Item) error {
 	return s.repo.CreateItem(ctx, item)
+}
+
+func (s *ItemService) GetItems(ctx context.Context, filter *domain.Filter) (*[]domain.Item, error) {
+	return s.repo.GetItems(ctx, filter)
 }

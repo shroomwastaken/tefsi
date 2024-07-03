@@ -46,6 +46,7 @@ func main() {
 
 	r.Get("/item/{id}", item_handler.GetItemByID)
 	r.Post("/item", item_handler.CreateItem)
+	r.Get("/item/list", item_handler.GetItems)
 
 	// Запуск HTTP сервера
 	log.Println("Starting server on :8080")
