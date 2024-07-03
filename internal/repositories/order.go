@@ -11,31 +11,53 @@ type OrderRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewOrderRepository(db *pgxpool.Pool) *OrderRepository {
-	sqlString := `CREATE TABLE statuses
-	(
-		id serial primary key,
-		title text
-	)`
-	db.Exec(context.Background(), sqlString)
-	sqlString = `CREATE TABLE orders
-	(
-		id serial primary key,
-		status int,
-		user_id int,
-		FOREIGN KEY (status) REFERENCES statuses(id),
-		FOREIGN KEY (user_id) REFERENCES users(id)
-	)`
-	db.Exec(context.Background(), sqlString)
-	sqlString = `CREATE TABLE items_orders
-    (
-        id serial primary key,
-        item int,
-        amount int,
-        order_id int
-    )`
-	db.Exec(context.Background(), sqlString)
-	return &OrderRepository{db: db}
+func NewOrderRepository(db *pgxpool.Pool, all_tables *map[string]struct{}) (*OrderRepository, error) {
+	_, ok := (*all_tables)["statuses"]
+	if !ok {
+		sqlString := `CREATE TABLE statuses
+            (
+                id serial primary key,
+                title text
+            )`
+		_, err := db.Exec(context.Background(), sqlString)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	_, ok = (*all_tables)["orders"]
+	if !ok {
+		sqlString := `CREATE TABLE orders
+        (
+            id serial primary key,
+            status int,
+            user_id int,
+            FOREIGN KEY (status) REFERENCES statuses(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )`
+		_, err := db.Exec(context.Background(), sqlString)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	_, ok = (*all_tables)["items_orders"]
+	if !ok {
+		sqlString := `CREATE TABLE items_orders
+        (
+            id serial primary key,
+            item int,
+            amount int,
+            order_id int
+        )`
+
+		_, err := db.Exec(context.Background(), sqlString)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &OrderRepository{db: db}, nil
 }
 
 func (r *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) error {
