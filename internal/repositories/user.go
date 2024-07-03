@@ -32,6 +32,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) erro
 	return err
 }
 
-func (h *UserRepository) GetUserCartByID(ctx context.Context, id int) ([]domain.Item, error) {
-	return make([]domain.Item, 0), nil // plug
+func (h *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error) {
+	cart := make([]domain.Item, 0)
+	return &cart, nil // plug
 }

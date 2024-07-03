@@ -14,7 +14,7 @@ import (
 type UserService interface {
 	GetUserByID(ctx context.Context, id int) (*domain.User, error)
 	CreateUser(ctx context.Context, user *domain.User) error
-	GetUserCartByID(ctx context.Context, id int) ([]domain.Item, error)
+	GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error)
 }
 
 // Обработчики HTTP запросов
@@ -75,5 +75,5 @@ func (h *UserHandler) GetUserCartByID(w http.ResponseWriter, r *http.Request) {
 	cartItems, err := h.service.GetUserCartByID(r.Context(), cartID)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(cartItems)
+	json.NewEncoder(w).Encode(*cartItems)
 }
