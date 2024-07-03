@@ -23,21 +23,35 @@ func NewOrderRepository(db *pgxpool.Pool) *OrderRepository {
 		id serial primary key,
 		status int,
 		user int,
-		FOREIGN KEY status REFERNCES statuses(id),
-		FOREIGN KEY user REFERNCES users(id)
+		FOREIGN KEY (status) REFERENCES statuses(id),
+		FOREIGN KEY (user) REFERENCES users(id)
 	)`
+	_, err := db.Exec(context.Background(), sqlString)
+	if err != nil {
+		panic(err)
+	}
+	sqlString = `CREATE TABLE items_orders
+    (
+        id serial primary key,
+        item int,
+        amount int,
+        order int
+    )`
 	db.Exec(context.Background(), sqlString)
 	return &OrderRepository{db: db}
 }
 
 func (r *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) error {
-	orderSQL := "INSERT into orders (id, status, user) VALUES ($1, $2, $3)"
+	orderSQL := "INSERT INTO orders (id, status, user) VALUES ($1, $2, $3)"
 	_, err := r.db.Exec(ctx, orderSQL, order.ID, order.StatusID, order.UserID)
+	if err != nil {
+		return err
+	}
 
 	itemSQL := "INSERT into items_orders (item, order, amount) VALUES ($1, $2, $3)"
 
-	for item, amount := range order.Items {
-		_, err := r.db.Exec(ctx, itemSQL, item.ID, order.ID, amount)
+	for i := range order.Items {
+		_, err := r.db.Exec(ctx, itemSQL, order.Items[i].ID, order.ID, order.Amounts[i])
 		if err != nil {
 			return err
 		}
@@ -47,16 +61,19 @@ func (r *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) 
 }
 
 // s dnem prikolov
-func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *domain.Order) (string, *map[*domain.Item]int, error) {
+func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *domain.Order) (string, *[]domain.Item, *[]int, error) {
 	var statusTitle string
-	items := make(map[*domain.Item]int)
+	// items := make(map[*domain.Item]int)
+	items := []domain.Item{}
+	amounts := []int{}
+
 	statusTitleSQL := `SELECT statuses.title
     FROM statuses
     WHERE id = $1`
 
 	err := r.db.QueryRow(ctx, statusTitleSQL, order.StatusID).Scan(&statusTitle)
 	if err != nil {
-		return "", nil, err
+		return "", nil, nil, err
 	}
 
 	itemsSQL := `SELECT items.id, items.title, items.description, items.price, items.category, categories.title, items_orders.amount
@@ -69,7 +86,7 @@ func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *dom
 
 	// TODO: proper error handling
 	if err != nil {
-		return "", nil, err
+		return "", nil, nil, err
 	}
 
 	for itemsRows.Next() {
@@ -79,13 +96,14 @@ func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *dom
 		err := itemsRows.Scan(&item.ID, &item.Title, &item.Description, &item.Price, &item.CategoryID, &item.CategoryTitle, &amount)
 
 		if err != nil {
-			return "", nil, err
+			return "", nil, nil, err
 		}
 
-		items[&item] = amount
+		items = append(items, item)
+		amounts = append(amounts, amount)
 	}
 
-	return statusTitle, &items, nil
+	return statusTitle, &items, &amounts, nil
 }
 
 func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Order, error) {
@@ -100,7 +118,7 @@ func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Ord
 		return nil, err
 	}
 
-	statusTitle, items, err := r.getStatusTitleAndItems(ctx, &order)
+	statusTitle, items, amounts, err := r.getStatusTitleAndItems(ctx, &order)
 
 	if err != nil {
 		return nil, err
@@ -108,6 +126,7 @@ func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Ord
 
 	order.StatusTitle = statusTitle
 	order.Items = *items
+	order.Amounts = *amounts
 
 	return &order, nil
 }
@@ -129,13 +148,14 @@ func (r *OrderRepository) GetOrders(ctx context.Context) (*[]domain.Order, error
 			return nil, err
 		}
 
-		statusTitle, items, err := r.getStatusTitleAndItems(ctx, &order)
+		statusTitle, items, amounts, err := r.getStatusTitleAndItems(ctx, &order)
 		if err != nil {
 			return nil, err
 		}
 
 		order.StatusTitle = statusTitle
 		order.Items = *items
+		order.Amounts = *amounts
 
 		orders = append(orders, order)
 	}
@@ -163,8 +183,14 @@ func (r *OrderRepository) UpdateOrder(ctx context.Context, order *domain.Order) 
 
 	addItemSQL := "INSERT into items_orders (item, order, amount) VALUES ($1, $2, $3)"
 
-	for item, amount := range order.Items {
-		_, err := r.db.Exec(ctx, addItemSQL, item.ID, order.ID, amount)
+	// for item, amount := range order.Items {
+	// 	_, err := r.db.Exec(ctx, addItemSQL, item.ID, order.ID, amount)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+	for i := range order.Items {
+		_, err := r.db.Exec(ctx, addItemSQL, order.Items[i].ID, order.ID, order.Amounts[i])
 		if err != nil {
 			return err
 		}
