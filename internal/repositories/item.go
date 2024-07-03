@@ -21,9 +21,13 @@ func NewItemRepository(db *pgxpool.Pool) *ItemRepository {
 		description text,
 		price int,
 		category int,
-		FOREIGN KEY (category) REFERENCES category(id)
+		FOREIGN KEY (category) REFERENCES categories(id)
 	)`
-	db.Exec(context.Background(), sqlString)
+	_, err := db.Exec(context.Background(), sqlString)
+	// TODO: error handling
+	if err != nil {
+		panic(err)
+	}
 	return &ItemRepository{db: db}
 }
 
