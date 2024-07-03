@@ -9,7 +9,7 @@ import (
 type UserRepository interface {
 	GetUserByID(ctx context.Context, id int) (*domain.User, error)
 	CreateUser(ctx context.Context, user *domain.User) error
-	GetUserCartByID(ctx context.Context, id int) ([]domain.Item, error)
+	GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error)
 }
 
 // Реализация сервиса
@@ -29,6 +29,6 @@ func (s *UserService) CreateUser(ctx context.Context, user *domain.User) error {
 	return s.repo.CreateUser(ctx, user)
 }
 
-func (s *UserService) GetUserCartByID(ctx context.Context, id int) ([]domain.Item, error) {
+func (s *UserService) GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error) {
 	return s.repo.GetUserCartByID(ctx, id)
 }
