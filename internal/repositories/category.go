@@ -62,16 +62,16 @@ func (r *CategoryRepository) GetCategories(ctx context.Context) (*[]domain.Categ
 }
 
 func (r *CategoryRepository) DeleteCategory(ctx context.Context, id int) error {
-	deleteSQL := "DELETE FROM categories WHERE id = $1"
-	_, err := r.db.Exec(ctx, deleteSQL, id)
+	deleteCategory := "DELETE FROM categories WHERE id = $1"
+	_, err := r.db.Exec(ctx, deleteCategory, id)
 	if err != nil {
 		return err
 	}
 
-	updateSQL := `UPDATE items
+	updateItemsSQL := `UPDATE items
     SET category = 0
     WHERE category = $1`
-	_, err = r.db.Exec(ctx, updateSQL, id)
+	_, err = r.db.Exec(ctx, updateItemsSQL, id)
 
 	return err
 }
