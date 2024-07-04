@@ -89,7 +89,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	w.Header().Add("JWT", t)
+	w.Header().Add("Authorization", "Bearer "+t)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(domain.LoginResponce{Token: t})
 }
@@ -127,6 +127,11 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
+}
+
+func (m *UserHandler) UserReqiered(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Get("Authorization")
+	})
 }
