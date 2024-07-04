@@ -3,13 +3,14 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/go-chi/chi"
-	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v5"
 
 	"tefsi/internal/domain"
 )
@@ -20,6 +21,7 @@ type UserService interface {
 	GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error)
 	DeleteUser(ctx context.Context, id int) error
 	CheckUserByDomain(ctx context.Context, user *domain.User) error
+	UserExists(ctx context.Context, login string) error
 }
 
 // Обработчики HTTP запросов
@@ -150,6 +152,23 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 func (m *UserHandler) UserReqiered(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Header.Get("Authorization")
+		t := r.Header.Get("Authorization")
+		token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte("some_secret"), nil
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		payload, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			panic(payload)
+		}
+		err = m.service.UserExists(r.Context(), payload["login"].(string))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	})
 }

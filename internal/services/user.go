@@ -12,6 +12,7 @@ type UserRepository interface {
 	GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error)
 	DeleteUser(ctx context.Context, id int) error
 	CheckUserByDomain(ctx context.Context, user *domain.User) error
+	UserExists(ctx context.Context, login int) error
 }
 
 // Реализация сервиса
@@ -41,4 +42,8 @@ func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 
 func (s *UserService) CheckUserByDomain(ctx context.Context, user *domain.User) error {
 	return s.repo.CheckUserByDomain(ctx, user)
+}
+
+func (s *UserService) UserExists(ctx context.Context, login int) error {
+	return s.repo.UserExists(ctx, login)
 }

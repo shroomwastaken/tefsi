@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -40,6 +41,17 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*domain.User,
 		return nil, err
 	}
 	return user, nil
+}
+
+func (r *UserRepository) UserExists(ctx context.Context, login string) error {
+	rows, err := r.db.Query(ctx, "SELECT login FROM users WHERE login = $1", login)
+	if err != nil {
+		return err
+	}
+	if !rows.Next() {
+		return fmt.Errorf("user does not exist")
+	}
+	return nil
 }
 
 func (r *UserRepository) CheckUserByDomain(ctx context.Context, user *domain.User) error {
