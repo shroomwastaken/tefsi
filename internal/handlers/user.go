@@ -102,7 +102,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Authorization", "Bearer "+t)
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(domain.LoginResponce{Token: t})
+	json.NewEncoder(w).Encode(domain.LoginResponse{Token: t})
 }
 
 func (h *UserHandler) GetUserCartByID(w http.ResponseWriter, r *http.Request) {
@@ -150,7 +150,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (m *UserHandler) UserReqiered(next http.Handler) http.Handler {
+func (m *UserHandler) UserRequiered(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t := r.Header.Get("Authorization")
 		token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {

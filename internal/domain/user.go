@@ -8,6 +8,6 @@ type User struct {
 	IsAdmin  bool   `json:"is_admin"`
 }
 
-type LoginResponce struct {
+type LoginResponse struct {
 	Token string `json:"token"`
 }
