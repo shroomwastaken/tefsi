@@ -68,6 +68,50 @@ func (r *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain
 	return &cart, nil // plug
 }
 
+func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
+	deleteUserSQL := "DELETE FROM users WHERE id = $1"
+	_, err := r.db.Exec(ctx, deleteUserSQL, id)
+	if err != nil {
+		return err
+	}
+
+	deleteItemsUsersSQL := "DELETE FROM items_users WHERE user = $1"
+	_, err = r.db.Exec(ctx, deleteItemsUsersSQL, id)
+	if err != nil {
+		return err
+	}
+
+	selectOrdersSQL := "SELECT id FROM orders WHERE user = $1"
+	ordersRows, err := r.db.Query(ctx, selectOrdersSQL, id)
+	orderIDs := []int{}
+
+	for ordersRows.Next() {
+		var orderID int
+		err := ordersRows.Scan(&orderID)
+		if err != nil {
+			return err
+		}
+
+		orderIDs = append(orderIDs, orderID)
+	}
+
+	deleteOrdersSQL := "DELETE FROM orders WHERE user = $1"
+	_, err = r.db.Exec(ctx, deleteOrdersSQL, id)
+	if err != nil {
+		return err
+	}
+
+	deleteItemsOrdersSQL := "DELETE FROM items_orders WHERE order = $1"
+	for _, orderID := range orderIDs {
+		_, err := r.db.Exec(ctx, deleteItemsOrdersSQL, orderID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (r *UserRepository) HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err
