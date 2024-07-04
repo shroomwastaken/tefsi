@@ -52,8 +52,45 @@ func (r *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain
 }
 
 func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
-	// TODO: needs sooooo many checks
-	sqlString := "DELETE FROM users WHERE id = $1"
-	_, err := r.db.Exec(ctx, sqlString, id)
-	return err
+	deleteUserSQL := "DELETE FROM users WHERE id = $1"
+	_, err := r.db.Exec(ctx, deleteUserSQL, id)
+	if err != nil {
+		return err
+	}
+
+	deleteItemsUsersSQL := "DELETE FROM items_users WHERE user = $1"
+	_, err = r.db.Exec(ctx, deleteItemsUsersSQL, id)
+	if err != nil {
+		return err
+	}
+
+	selectOrdersSQL := "SELECT id FROM orders WHERE user = $1"
+	ordersRows, err := r.db.Query(ctx, selectOrdersSQL, id)
+	orderIDs := []int{}
+
+	for ordersRows.Next() {
+		var orderID int
+		err := ordersRows.Scan(&orderID)
+		if err != nil {
+			return err
+		}
+
+		orderIDs = append(orderIDs, orderID)
+	}
+
+	deleteOrdersSQL := "DELETE FROM orders WHERE user = $1"
+	_, err = r.db.Exec(ctx, deleteOrdersSQL, id)
+	if err != nil {
+		return err
+	}
+
+	deleteItemsOrdersSQL := "DELETE FROM items_orders WHERE order = $1"
+	for _, orderID := range orderIDs {
+		_, err := r.db.Exec(ctx, deleteItemsOrdersSQL, orderID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
