@@ -14,6 +14,7 @@ type CategoryService interface {
 	CreateCategory(ctx context.Context, category *domain.Category) error
 	GetCategoryByID(ctx context.Context, id int) (*domain.Category, error)
 	GetCategories(ctx context.Context) (*[]domain.Category, error)
+	DeleteCategory(ctx context.Context, id int) error
 }
 
 type CategoryHandler struct {
@@ -69,4 +70,21 @@ func (h *CategoryHandler) GetCategories(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(*categoryList)
+}
+
+func (h *CategoryHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	categoryID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteCategory(r.Context(), categoryID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

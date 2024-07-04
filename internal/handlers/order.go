@@ -15,6 +15,7 @@ type OrderService interface {
 	GetOrderByID(ctx context.Context, id int) (*domain.Order, error)
 	UpdateOrder(ctx context.Context, order *domain.Order) error
 	GetOrders(ctx context.Context) (*[]domain.Order, error)
+	DeleteOrder(ctx context.Context, id int) error
 }
 
 type OrderHandler struct {
@@ -87,4 +88,21 @@ func (h *OrderHandler) UpdateOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *OrderHandler) DeleteOrder(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	orderID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid order ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteOrder(r.Context(), orderID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

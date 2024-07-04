@@ -10,6 +10,7 @@ type ItemRepository interface {
 	CreateItem(ctx context.Context, item *domain.Item) error
 	GetItemByID(ctx context.Context, id int) (*domain.Item, error)
 	GetItems(ctx context.Context, filter *domain.Filter) (*[]domain.Item, error)
+	DeleteItem(ctx context.Context, id int) error
 }
 
 type ItemService struct {
@@ -30,4 +31,8 @@ func (s *ItemService) CreateItem(ctx context.Context, item *domain.Item) error {
 
 func (s *ItemService) GetItems(ctx context.Context, filter *domain.Filter) (*[]domain.Item, error) {
 	return s.repo.GetItems(ctx, filter)
+}
+
+func (s *ItemService) DeleteItem(ctx context.Context, id int) error {
+	return s.repo.DeleteItem(ctx, id)
 }

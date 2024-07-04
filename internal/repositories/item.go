@@ -78,3 +78,10 @@ func (r *ItemRepository) GetItems(ctx context.Context, filter *domain.Filter) (*
 	}
 	return &items, nil
 }
+
+func (r *ItemRepository) DeleteItem(ctx context.Context, id int) error {
+	// TODO: this definitely needs some extra checks
+	sqlString := "DELETE FROM items WHERE id = $1"
+	_, err := r.db.Exec(ctx, sqlString, id)
+	return err
+}

@@ -46,7 +46,14 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) erro
 	return err
 }
 
-func (h *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error) {
+func (r *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error) {
 	cart := make([]domain.Item, 0)
 	return &cart, nil // plug
+}
+
+func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
+	// TODO: needs sooooo many checks
+	sqlString := "DELETE FROM users WHERE id = $1"
+	_, err := r.db.Exec(ctx, sqlString, id)
+	return err
 }

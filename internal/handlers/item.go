@@ -14,6 +14,7 @@ type ItemService interface {
 	CreateItem(ctx context.Context, item *domain.Item) error
 	GetItemByID(ctx context.Context, id int) (*domain.Item, error)
 	GetItems(ctx context.Context, filter *domain.Filter) (*[]domain.Item, error)
+	DeleteItem(ctx context.Context, id int) error
 }
 
 type ItemHandler struct {
@@ -87,4 +88,21 @@ func (h *ItemHandler) GetItems(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(*itemList)
+}
+
+func (h *ItemHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	itemID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteItem(r.Context(), itemID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

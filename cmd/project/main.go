@@ -71,6 +71,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Get("/users/{id}", handler.GetUserByID)
 	r.Post("/users", handler.CreateUser)
+	r.Delete("/users/delete/{id}", handler.DeleteUser)
 
 	categoryRepo, err := repositories.NewCategoryRepository(db, &allTables)
 	if err != nil {
@@ -82,6 +83,7 @@ func main() {
 	r.Get("/category/{id}", categoryHandler.GetCategoryByID)
 	r.Post("/category", categoryHandler.CreateCategory)
 	r.Get("/category/list", categoryHandler.GetCategories)
+	r.Delete("/category/delete/{id}", categoryHandler.DeleteCategory)
 
 	itemRepo, err := repositories.NewItemRepository(db, &allTables)
 	if err != nil {
@@ -93,6 +95,7 @@ func main() {
 	r.Get("/item/{id}", itemHandler.GetItemByID)
 	r.Post("/item", itemHandler.CreateItem)
 	r.Get("/item/list", itemHandler.GetItems)
+	r.Delete("/item/delete/{id}", itemHandler.DeleteItem)
 
 	orderRepo, err := repositories.NewOrderRepository(db, &allTables)
 	if err != nil {
@@ -104,6 +107,7 @@ func main() {
 	r.Get("/order/{id}", orderHandler.GetOrderByID)
 	r.Post("/order", orderHandler.CreateOrder)
 	r.Get("/order/list", orderHandler.GetOrders)
+	r.Delete("/order/delete/{id}", orderHandler.DeleteOrder)
 
 	// Запуск HTTP сервера
 	log.Println("Starting server on :8080")

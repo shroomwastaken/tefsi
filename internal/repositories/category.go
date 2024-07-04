@@ -60,3 +60,10 @@ func (r *CategoryRepository) GetCategories(ctx context.Context) (*[]domain.Categ
 	}
 	return &categories, nil
 }
+
+func (r *CategoryRepository) DeleteCategory(ctx context.Context, id int) error {
+	// TODO: maybe delete all items that belong to this category
+	sqlString := "DELETE FROM categories WHERE id = $1"
+	_, err := r.db.Exec(ctx, sqlString, id)
+	return err
+}

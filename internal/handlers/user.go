@@ -15,6 +15,7 @@ type UserService interface {
 	GetUserByID(ctx context.Context, id int) (*domain.User, error)
 	CreateUser(ctx context.Context, user *domain.User) error
 	GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error)
+	DeleteUser(ctx context.Context, id int) error
 }
 
 // Обработчики HTTP запросов
@@ -81,4 +82,21 @@ func (h *UserHandler) GetUserCartByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(*cartItems)
+}
+
+func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	userID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest);
+		return
+	}
+
+	err = h.service.DeleteUser(r.Context(), userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
