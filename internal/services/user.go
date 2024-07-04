@@ -11,6 +11,7 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user *domain.User) error
 	GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error)
 	DeleteUser(ctx context.Context, id int) error
+	CheckUserByDomain(ctx context.Context, user *domain.User) error
 }
 
 // Реализация сервиса
@@ -36,4 +37,8 @@ func (s *UserService) GetUserCartByID(ctx context.Context, id int) (*[]domain.It
 
 func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 	return s.repo.DeleteUser(ctx, id)
+}
+
+func (s *UserService) CheckUserByDomain(ctx context.Context, user *domain.User) error {
+	return s.repo.CheckUserByDomain(ctx, user)
 }

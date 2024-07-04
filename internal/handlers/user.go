@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi"
+	jwt "github.com/golang-jwt/jwt/v5"
 
 	"tefsi/internal/domain"
 )
@@ -16,6 +18,7 @@ type UserService interface {
 	CreateUser(ctx context.Context, user *domain.User) error
 	GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error)
 	DeleteUser(ctx context.Context, id int) error
+	CheckUserByDomain(ctx context.Context, user *domain.User) error
 }
 
 // Обработчики HTTP запросов
@@ -54,7 +57,6 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	err = h.service.CreateUser(r.Context(), &user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -62,6 +64,34 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var user domain.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = h.service.CheckUserByDomain(r.Context(), &user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	payload := jwt.MapClaims{
+		"sub": user.Login,
+		"exp": time.Now().Add(time.Hour * 72).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
+	t, err := token.SignedString([]byte("some_secret"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Header().Add("JWT", t)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(domain.LoginResponce{Token: t})
 }
 
 func (h *UserHandler) GetUserCartByID(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +118,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	userID, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest);
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
