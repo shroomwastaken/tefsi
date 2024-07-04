@@ -221,8 +221,14 @@ func (r *OrderRepository) UpdateOrder(ctx context.Context, order *domain.Order) 
 }
 
 func (r *OrderRepository) DeleteOrder(ctx context.Context, id int) error {
-	// TODO: also needs various checks
-	sqlString := "DELETE FROM orders WHERE id = $1"
-	_, err := r.db.Exec(ctx, sqlString, id)
+	itemsSQL := "DELETE FROM orders WHERE id = $1"
+	_, err := r.db.Exec(ctx, itemsSQL, id)
+	if err != nil {
+		return err
+	}
+
+	itemsOrdersSQL := "DELETE FROM items_orders WHERE item = $1"
+	_, err = r.db.Exec(ctx, itemsOrdersSQL, id)
+
 	return err
 }

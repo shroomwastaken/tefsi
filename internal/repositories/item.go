@@ -80,8 +80,20 @@ func (r *ItemRepository) GetItems(ctx context.Context, filter *domain.Filter) (*
 }
 
 func (r *ItemRepository) DeleteItem(ctx context.Context, id int) error {
-	// TODO: this definitely needs some extra checks
-	sqlString := "DELETE FROM items WHERE id = $1"
-	_, err := r.db.Exec(ctx, sqlString, id)
+	itemsOrdersSQL := "SELECT * FROM items_orders WHERE item = $1"
+	itemsOrdersRows, err := r.db.Query(ctx, itemsOrdersSQL, id)
+	if itemsOrdersRows.Next() {
+		return fmt.Errorf("DeleteItem error: can't delete items present in items_orders")
+	}
+
+	deleteItemsSQL := "DELETE FROM items WHERE id = $1"
+	_, err = r.db.Exec(ctx, deleteItemsSQL, id)
+	if err != nil {
+		return err
+	}
+
+	deleteItemsUsersSQL := "DELETE FROM items_users WHERE item = $1"
+	_, err = r.db.Exec(ctx, deleteItemsUsersSQL, id)
+
 	return err
 }
