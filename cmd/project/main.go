@@ -52,20 +52,23 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("connected to db")
 	defer db.Close()
 
 	allTables, err := GetAllTables(db)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
+	log.Println("got all tables")
 
 	// Создание репозитория, сервиса и обработчиков
 	userRepo, err := repositories.NewUserRepository(db, &allTables)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	userService := services.NewDefaultUserService(userRepo)
 	userHandler := handlers.NewUserHandler(userService)
+	log.Println("created user repo, service and handler")
 
 	// Настройка маршрутизатора
 	r := chi.NewRouter()
@@ -75,10 +78,11 @@ func main() {
 
 	categoryRepo, err := repositories.NewCategoryRepository(db, &allTables)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	categoryService := services.NewDefaultCategoryService(categoryRepo)
 	categoryHandler := handlers.NewCategoryHandler(categoryService)
+	log.Println("created category repo, service and handler")
 
 	r.Get("/category/{id}", categoryHandler.GetCategoryByID)
 	r.Post("/category", categoryHandler.CreateCategory)
@@ -87,10 +91,11 @@ func main() {
 
 	itemRepo, err := repositories.NewItemRepository(db, &allTables)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	itemService := services.NewDefaultItemService(itemRepo)
 	itemHandler := handlers.NewItemHandler(itemService)
+	log.Println("created item repo, service and handler")
 
 	r.Get("/item/{id}", itemHandler.GetItemByID)
 	r.Post("/item", itemHandler.CreateItem)
@@ -103,6 +108,7 @@ func main() {
 	}
 	orderService := services.NewDefaultOrderService(orderRepo)
 	orderHandler := handlers.NewOrderHandler(orderService)
+	log.Println("created order repo, service and handler")
 
 	r.Get("/order/{id}", orderHandler.GetOrderByID)
 	r.Post("/order", orderHandler.CreateOrder)
