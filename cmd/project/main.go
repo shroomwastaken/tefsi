@@ -60,18 +60,18 @@ func main() {
 	}
 
 	// Создание репозитория, сервиса и обработчиков
-	repo, err := repositories.NewUserRepository(db, &allTables)
+	userRepo, err := repositories.NewUserRepository(db, &allTables)
 	if err != nil {
 		panic(err)
 	}
-	service := services.NewDefaultUserService(repo)
-	handler := handlers.NewUserHandler(service)
+	userService := services.NewDefaultUserService(userRepo)
+	userHandler := handlers.NewUserHandler(userService)
 
 	// Настройка маршрутизатора
 	r := chi.NewRouter()
-	r.Get("/users/{id}", handler.GetUserByID)
-	r.Post("/users", handler.CreateUser)
-	r.Delete("/users/delete/{id}", handler.DeleteUser)
+	r.Get("/users/{id}", userHandler.GetUserByID)
+	r.Post("/users", userHandler.CreateUser)
+	r.Delete("/users/delete/{id}", userHandler.DeleteUser)
 
 	categoryRepo, err := repositories.NewCategoryRepository(db, &allTables)
 	if err != nil {
