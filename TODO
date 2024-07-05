@@ -1,0 +1,29 @@
+auth
+    finish the middleware functions
+    wrap the handlers
+tests
+    init as functions instead of just code in main (for tests mostly)
+    rewrite so repos have an interface instead of the pool struct (also for tests mostly)
+        possibly rewrite everything if we stupid
+search
+    rewrite how GetItems works with filter
+
+decide what to do with frontend
+    force frontenders to work
+    or do it in go
+        gio
+            https://gioui.org
+            hard to learn but good if can
+        fyne
+            https://fyne.io/
+            easier to use Probably but i havent used it
+        wails
+            https://wails.io/
+            made for web apps
+            literally uses svelte for frontend what?
+        ebiten
+            funny name
+            dogshit for ui
+            literally a game library dont use it for web ui stuff
+
+    or use something else idk
