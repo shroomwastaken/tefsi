@@ -3,6 +3,7 @@ auth
     wrap the handlers
 tests
     init as functions instead of just code in main (for tests mostly)
+        also rewrite main to not hardcode logins, passwords, etc (not for tests)
     rewrite so repos have an interface instead of the pool struct (also for tests mostly)
         possibly rewrite everything if we stupid
 search
