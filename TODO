@@ -1,6 +1,20 @@
 auth
     finish the middleware functions
     wrap the handlers
+    немного мыслей (я русский извините)
+        - мидлварю надо всё таки отделить в отдельный пакет, 
+          тк мы будем её импортировать, и импортировать при этом все хэндлеры не ок
+
+        - чтобы не переписывать все хэндлеры можем не делать классическую мидлварю,
+          а использовать её в самих хэндлерах по паттерну:
+            func handler () (w, r) {
+                err := middleware(w, r)
+                if err != nil {
+                    http.error(...)
+                }
+                ...
+            }
+        да, костыли, но написать вроде проще
 tests
     init as functions instead of just code in main (for tests mostly)
         also rewrite main to not hardcode logins, passwords, etc (not for tests)
