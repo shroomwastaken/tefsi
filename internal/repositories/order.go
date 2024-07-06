@@ -63,8 +63,8 @@ func NewOrderRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*Orde
 }
 
 func (r *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) error {
-	orderSQL := "INSERT INTO orders (id, status, user_id) VALUES ($1, $2, $3)"
-	_, err := r.db.Exec(ctx, orderSQL, order.ID, order.StatusID, order.UserID)
+	orderSQL := "INSERT INTO orders (status, user_id) VALUES ($1, $2)"
+	_, err := r.db.Exec(ctx, orderSQL, order.StatusID, order.UserID)
 	if err != nil {
 		return err
 	}
