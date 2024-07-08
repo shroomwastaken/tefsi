@@ -150,7 +150,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (m *UserHandler) UserRequired(next http.Handler) http.Handler {
+func (m *UserHandler) UserRequired(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t := r.Header.Get("Authorization")
 		token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
@@ -170,5 +170,6 @@ func (m *UserHandler) UserRequired(next http.Handler) http.Handler {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		next(w, r)
 	})
 }
