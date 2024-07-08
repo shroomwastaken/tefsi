@@ -14,6 +14,7 @@ type UserRepository interface {
 	CheckUserByDomain(ctx context.Context, user *domain.User) error
 	UserExists(ctx context.Context, login string) error
 	UserIsAdmin(ctx context.Context, login string) (bool, error)
+	GetUserByLogin(ctx context.Context, login string) (*domain.User, error)
 }
 
 // Реализация сервиса
@@ -51,4 +52,8 @@ func (s *UserService) UserExists(ctx context.Context, login string) error {
 
 func (s *UserService) UserIsAdmin(ctx context.Context, login string) (bool, error) {
 	return s.repo.UserIsAdmin(ctx, login)
+}
+
+func (s *UserService) GetUserByLogin(ctx context.Context, login string) (*domain.User, error) {
+	return s.repo.GetUserByLogin(ctx, login)
 }

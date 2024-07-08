@@ -24,6 +24,7 @@ type UserService interface {
 	CheckUserByDomain(ctx context.Context, user *domain.User) error
 	UserExists(ctx context.Context, login string) error
 	UserIsAdmin(ctx context.Context, login string) (bool, error)
+	GetUserByLogin(ctx context.Context, login string) (*domain.User, error)
 }
 
 // Обработчики HTTP запросов
@@ -192,6 +193,38 @@ func (m *UserHandler) AdminRequired(next func(w http.ResponseWriter, r *http.Req
 			return
 		}
 		log.Printf("leaving AdminRequired middleware")
+		next(w, r)
+	}
+}
+
+func (m *UserHandler) AdminOrSameUserRequired(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("entering AdminOrSameUserRequired middleware")
+		login, err := getUserLoginFromJWT(r.Header.Get("Authorization"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		user, err := m.service.GetUserByLogin(r.Context(), login)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		idStr := chi.URLParam(r, "id")
+		userID, err := strconv.Atoi(idStr)
+		if err != nil {
+			log.Printf("got invalid user ID: %s", idStr)
+			http.Error(w, "Invalid user ID", http.StatusBadRequest)
+			return
+		}
+
+		if !user.IsAdmin && userID != user.ID {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		log.Printf("leaving AdminOrSameUserRequired middleware")
 		next(w, r)
 	}
 }

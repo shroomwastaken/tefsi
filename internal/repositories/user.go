@@ -172,6 +172,16 @@ func (r *UserRepository) UserIsAdmin(ctx context.Context, login string) (bool, e
 	return isAdmin, err
 }
 
+func (r *UserRepository) GetUserByLogin(ctx context.Context, login string) (*domain.User, error) {
+	user := &domain.User{}
+	err := r.db.QueryRow(ctx, "SELECT id, login, password, is_admin FROM users WHERE login = $1", login).
+		Scan(&user.ID, &user.Login, &user.Password, &user.IsAdmin)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (r *UserRepository) HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err
