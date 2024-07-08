@@ -234,3 +234,37 @@ func (r *OrderRepository) DeleteOrder(ctx context.Context, id int) error {
 
 	return err
 }
+
+func (r *OrderRepository) GetOrdersByUserID(ctx context.Context, id int) (*[]domain.Order, error) {
+	sqlString := `Select orders.id, orders.status
+    FROM orders
+    WHERE orders.user_id = $1`
+
+	rows, err := r.db.Query(ctx, sqlString, id)
+	if err != nil {
+		return nil, err
+	}
+
+	orders := []domain.Order{}
+
+	for rows.Next() {
+		order := domain.Order{UserID: id}
+		err := rows.Scan(&order.ID, &order.StatusID)
+		if err != nil {
+			return nil, err
+		}
+
+		statusTitle, items, amounts, err := r.getStatusTitleAndItems(ctx, &order)
+		if err != nil {
+			return nil, err
+		}
+
+		order.StatusTitle = statusTitle
+		order.Items = *items
+		order.Amounts = *amounts
+
+		orders = append(orders, order)
+	}
+
+	return &orders, nil
+}
