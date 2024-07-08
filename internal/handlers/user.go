@@ -15,7 +15,7 @@ import (
 type UserService interface {
 	GetUserByID(ctx context.Context, id int) (*domain.User, error)
 	CreateUser(ctx context.Context, user *domain.User) error
-	GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error)
+	GetUserCartByID(ctx context.Context, id int) (*[]domain.ItemWithAmount, error)
 	DeleteUser(ctx context.Context, id int) error
 }
 
@@ -103,7 +103,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Printf("got invalid user ID: %s", idStr)
-		http.Error(w, "Invalid user ID", http.StatusBadRequest);
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 

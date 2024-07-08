@@ -65,7 +65,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) erro
 }
 
 // TODO: check that it works
-func (r *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, *[]int, error) {
+func (r *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain.ItemWithAmount, error) {
 	sqlString := `SELECT items.id, items.title, items.description, items.price, items.category, categories.title, items_users.amount
     FROM items_users
     JOIN items ON items.id = items_users.id
@@ -74,26 +74,23 @@ func (r *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain
 
 	rows, err := r.db.Query(ctx, sqlString, id)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	items := []domain.Item{}
-	amounts := []int{}
+	items := []domain.ItemWithAmount{}
 
 	for rows.Next() {
-		item := domain.Item{}
-		var amount int
+		item := domain.ItemWithAmount{}
 
-		err := rows.Scan(&item.ID, &item.Title, &item.Description, &item.Price, &item.CategoryID, &item.CategoryTitle, &amount)
+		err := rows.Scan(&item.Item.ID, &item.Item.Title, &item.Item.Description, &item.Item.Price, &item.Item.CategoryID, &item.Item.CategoryTitle, &item.Amount)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		items = append(items, item)
-		amounts = append(amounts, amount)
 	}
 
-	return &items, &amounts, nil
+	return &items, nil
 }
 
 func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
