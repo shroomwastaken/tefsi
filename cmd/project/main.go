@@ -61,21 +61,7 @@ func main() {
 	}
 	log.Println("got all tables")
 
-	// Создание репозитория, сервиса и обработчиков
-	userRepo, err := repositories.NewUserRepository(db, &allTables)
-	if err != nil {
-		log.Fatal(err)
-	}
-	userService := services.NewDefaultUserService(userRepo)
-	userHandler := handlers.NewUserHandler(userService)
-	log.Println("created user repo, service and handler")
-
-	// Настройка маршрутизатора
 	r := chi.NewRouter()
-	r.Get("/users/{id}", userHandler.UserRequired(userHandler.GetUserByID))
-	r.Post("/users", userHandler.CreateUser)
-	r.Post("/users/login", userHandler.Login)
-	r.Delete("/users/delete/{id}", userHandler.DeleteUser)
 
 	categoryRepo, err := repositories.NewCategoryRepository(db, &allTables)
 	if err != nil {
@@ -102,6 +88,19 @@ func main() {
 	r.Post("/item", itemHandler.CreateItem)
 	r.Get("/item/list", itemHandler.GetItems)
 	r.Delete("/item/delete/{id}", itemHandler.DeleteItem)
+
+	userRepo, err := repositories.NewUserRepository(db, &allTables)
+	if err != nil {
+		log.Fatal(err)
+	}
+	userService := services.NewDefaultUserService(userRepo)
+	userHandler := handlers.NewUserHandler(userService)
+	log.Println("created user repo, service and handler")
+
+	r.Get("/users/{id}", userHandler.UserRequired(userHandler.GetUserByID))
+	r.Post("/users", userHandler.CreateUser)
+	r.Post("/users/login", userHandler.Login)
+	r.Delete("/users/delete/{id}", userHandler.DeleteUser)
 
 	orderRepo, err := repositories.NewOrderRepository(db, &allTables)
 	if err != nil {
