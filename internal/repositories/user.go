@@ -35,6 +35,7 @@ func NewUserRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*UserR
         (
             id serial primary key,
             item int,
+            amount int,
             user_id int,
             FOREIGN KEY (item) REFERENCES items(id),
             FOREIGN KEY (user_id) REFERENCES users(id)
@@ -63,9 +64,36 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) erro
 	return err
 }
 
-func (r *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, error) {
-	cart := make([]domain.Item, 0)
-	return &cart, nil // plug
+// TODO: check that it works
+func (r *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain.Item, *[]int, error) {
+	sqlString := `SELECT items.id, items.title, items.description, items.price, items.category, categories.title, items_users.amount
+    FROM items_users
+    JOIN items ON items.id = items_users.id
+    JOIN categories on items.category = categories.id
+    WHERE items_users.user = $1`
+
+	rows, err := r.db.Query(ctx, sqlString, id)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	items := []domain.Item{}
+	amounts := []int{}
+
+	for rows.Next() {
+		item := domain.Item{}
+		var amount int
+
+		err := rows.Scan(&item.ID, &item.Title, &item.Description, &item.Price, &item.CategoryID, &item.CategoryTitle, &amount)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		items = append(items, item)
+		amounts = append(amounts, amount)
+	}
+
+	return &items, &amounts, nil
 }
 
 func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
