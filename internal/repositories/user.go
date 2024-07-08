@@ -36,8 +36,8 @@ func NewUserRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*UserR
             id serial primary key,
             item int,
             user_id int,
-            FOREIGN KEY item REFERENCES items(id),
-            FOREIGN KEY user_id REFERENCES users(id),
+            FOREIGN KEY (item) REFERENCES items(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )`
 		_, err := db.Exec(context.Background(), sqlString)
 		if err != nil {

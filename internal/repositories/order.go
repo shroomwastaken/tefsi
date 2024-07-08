@@ -50,7 +50,9 @@ func NewOrderRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*Orde
             id serial primary key,
             item int,
             amount int,
-            order_id int
+            order_id int,
+            FOREIGN KEY (item) REFERENCES items(id),
+            FOREIGN KEY (order_id) REFERENCES orders(id)
         )`
 
 		_, err := db.Exec(context.Background(), sqlString)
