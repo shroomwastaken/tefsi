@@ -56,18 +56,20 @@ func (r *ItemRepository) CreateItem(ctx context.Context, item *domain.Item) erro
 	return err
 }
 
+// TODO: test that filter works
 func (r *ItemRepository) GetItems(ctx context.Context, filter *domain.Filter) (*[]domain.Item, error) {
 	var items []domain.Item
 	sqlString := `SELECT items.id, items.title, items.description, items.price, items.category, categories.title
 	FROM items
 	JOIN categories ON items.category = categories.id`
-	if filter.CategoryID != 0 {
-		sqlString += fmt.Sprintf("\nWHERE items.category = %d", filter.CategoryID)
-	}
-	rows, err := r.db.Query(ctx, sqlString)
+
+	sqlString += filter.GenerateString()
+
+	rows, err := r.db.Query(ctx, sqlString, filter.GetDBParams()...)
 	if err != nil {
 		return nil, err
 	}
+
 	for rows.Next() {
 		item := domain.Item{}
 		err := rows.Scan(&item.ID, &item.Title, &item.Description, &item.Price, &item.CategoryID, &item.CategoryTitle)
