@@ -8,3 +8,8 @@ type Item struct {
 	CategoryID    int    `json:"category_id"`
 	CategoryTitle string `json:"category_title"`
 }
+
+type ItemWithAmount struct {
+	Item   Item `json:"item"`
+	Amount int  `json:"amount"`
+}

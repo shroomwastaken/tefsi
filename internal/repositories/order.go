@@ -74,7 +74,7 @@ func (r *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) 
 	itemSQL := "INSERT into items_orders (item, order_id, amount) VALUES ($1, $2, $3)"
 
 	for i := range order.Items {
-		_, err := r.db.Exec(ctx, itemSQL, order.Items[i].ID, order.ID, order.Amounts[i])
+		_, err := r.db.Exec(ctx, itemSQL, order.Items[i].Item, order.ID, order.Items[i].Amount)
 		if err != nil {
 			return err
 		}
@@ -84,11 +84,9 @@ func (r *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) 
 }
 
 // s dnem prikolov
-func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *domain.Order) (string, *[]domain.Item, *[]int, error) {
+func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *domain.Order) (string, *[]domain.ItemWithAmount, error) {
 	var statusTitle string
-	// items := make(map[*domain.Item]int)
-	items := []domain.Item{}
-	amounts := []int{}
+	items := []domain.ItemWithAmount{}
 
 	statusTitleSQL := `SELECT statuses.title
     FROM statuses
@@ -96,7 +94,7 @@ func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *dom
 
 	err := r.db.QueryRow(ctx, statusTitleSQL, order.StatusID).Scan(&statusTitle)
 	if err != nil {
-		return "", nil, nil, err
+		return "", nil, err
 	}
 
 	itemsSQL := `SELECT items.id, items.title, items.description, items.price, items.category, categories.title, items_orders.amount
@@ -109,24 +107,22 @@ func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *dom
 
 	// TODO: proper error handling
 	if err != nil {
-		return "", nil, nil, err
+		return "", nil, err
 	}
 
 	for itemsRows.Next() {
-		item := domain.Item{}
-		var amount int
+		item := domain.ItemWithAmount{}
 
-		err := itemsRows.Scan(&item.ID, &item.Title, &item.Description, &item.Price, &item.CategoryID, &item.CategoryTitle, &amount)
+		err := itemsRows.Scan(&item.Item.ID, &item.Item.Title, &item.Item.Description, &item.Item.Price, &item.Item.CategoryID, &item.Item.CategoryTitle, &item.Amount)
 
 		if err != nil {
-			return "", nil, nil, err
+			return "", nil, err
 		}
 
 		items = append(items, item)
-		amounts = append(amounts, amount)
 	}
 
-	return statusTitle, &items, &amounts, nil
+	return statusTitle, &items, nil
 }
 
 func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Order, error) {
@@ -141,7 +137,7 @@ func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Ord
 		return nil, err
 	}
 
-	statusTitle, items, amounts, err := r.getStatusTitleAndItems(ctx, &order)
+	statusTitle, items, err := r.getStatusTitleAndItems(ctx, &order)
 
 	if err != nil {
 		return nil, err
@@ -149,7 +145,6 @@ func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Ord
 
 	order.StatusTitle = statusTitle
 	order.Items = *items
-	order.Amounts = *amounts
 
 	return &order, nil
 }
@@ -171,14 +166,13 @@ func (r *OrderRepository) GetOrders(ctx context.Context) (*[]domain.Order, error
 			return nil, err
 		}
 
-		statusTitle, items, amounts, err := r.getStatusTitleAndItems(ctx, &order)
+		statusTitle, items, err := r.getStatusTitleAndItems(ctx, &order)
 		if err != nil {
 			return nil, err
 		}
 
 		order.StatusTitle = statusTitle
 		order.Items = *items
-		order.Amounts = *amounts
 
 		orders = append(orders, order)
 	}
@@ -206,14 +200,8 @@ func (r *OrderRepository) UpdateOrder(ctx context.Context, order *domain.Order) 
 
 	addItemSQL := "INSERT into items_orders (item, order_id, amount) VALUES ($1, $2, $3)"
 
-	// for item, amount := range order.Items {
-	// 	_, err := r.db.Exec(ctx, addItemSQL, item.ID, order.ID, amount)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 	for i := range order.Items {
-		_, err := r.db.Exec(ctx, addItemSQL, order.Items[i].ID, order.ID, order.Amounts[i])
+		_, err := r.db.Exec(ctx, addItemSQL, order.Items[i].Item.ID, order.ID, order.Items[i].Amount)
 		if err != nil {
 			return err
 		}
@@ -254,14 +242,13 @@ func (r *OrderRepository) GetOrdersByUserID(ctx context.Context, id int) (*[]dom
 			return nil, err
 		}
 
-		statusTitle, items, amounts, err := r.getStatusTitleAndItems(ctx, &order)
+		statusTitle, items, err := r.getStatusTitleAndItems(ctx, &order)
 		if err != nil {
 			return nil, err
 		}
 
 		order.StatusTitle = statusTitle
 		order.Items = *items
-		order.Amounts = *amounts
 
 		orders = append(orders, order)
 	}
