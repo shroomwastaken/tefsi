@@ -76,19 +76,6 @@ func main() {
 	r.Get("/category/list", categoryHandler.GetCategories)
 	r.Delete("/category/delete/{id}", categoryHandler.DeleteCategory)
 
-	itemRepo, err := repositories.NewItemRepository(db, &allTables)
-	if err != nil {
-		log.Fatal(err)
-	}
-	itemService := services.NewDefaultItemService(itemRepo)
-	itemHandler := handlers.NewItemHandler(itemService)
-	log.Println("created item repo, service and handler")
-
-	r.Get("/item/{id}", itemHandler.GetItemByID)
-	r.Post("/item", itemHandler.CreateItem)
-	r.Get("/item/list", itemHandler.GetItems)
-	r.Delete("/item/delete/{id}", itemHandler.DeleteItem)
-
 	userRepo, err := repositories.NewUserRepository(db, &allTables)
 	if err != nil {
 		log.Fatal(err)
@@ -101,6 +88,19 @@ func main() {
 	r.Post("/users", userHandler.CreateUser)
 	r.Post("/users/login", userHandler.Login)
 	r.Delete("/users/delete/{id}", userHandler.DeleteUser)
+
+	itemRepo, err := repositories.NewItemRepository(db, &allTables)
+	if err != nil {
+		log.Fatal(err)
+	}
+	itemService := services.NewDefaultItemService(itemRepo)
+	itemHandler := handlers.NewItemHandler(itemService)
+	log.Println("created item repo, service and handler")
+
+	r.Get("/item/{id}", itemHandler.GetItemByID)
+	r.Post("/item", userHandler.AdminRequired(itemHandler.CreateItem))
+	r.Get("/item/list", itemHandler.GetItems)
+	r.Delete("/item/delete/{id}", userHandler.AdminRequired(itemHandler.DeleteItem))
 
 	orderRepo, err := repositories.NewOrderRepository(db, &allTables)
 	if err != nil {
