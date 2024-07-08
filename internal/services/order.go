@@ -12,6 +12,7 @@ type OrderRepository interface {
 	UpdateOrder(ctx context.Context, order *domain.Order) error
 	GetOrders(ctx context.Context) (*[]domain.Order, error)
 	DeleteOrder(ctx context.Context, id int) error
+	GetOrdersByUserID(ctx context.Context, id int) (*[]domain.Order, error)
 }
 
 type OrderService struct {
@@ -40,4 +41,8 @@ func (s *OrderService) UpdateOrder(ctx context.Context, order *domain.Order) err
 
 func (s *OrderService) DeleteOrder(ctx context.Context, id int) error {
 	return s.repo.DeleteOrder(ctx, id)
+}
+
+func (s *OrderService) GetOrdersByUserID(ctx context.Context, id int) (*[]domain.Order, error) {
+	return s.repo.GetOrdersByUserID(ctx, id)
 }

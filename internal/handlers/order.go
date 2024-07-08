@@ -17,6 +17,7 @@ type OrderService interface {
 	UpdateOrder(ctx context.Context, order *domain.Order) error
 	GetOrders(ctx context.Context) (*[]domain.Order, error)
 	DeleteOrder(ctx context.Context, id int) error
+	GetOrdersByUserID(ctx context.Context, id int) (*[]domain.Order, error)
 }
 
 type OrderHandler struct {
@@ -61,7 +62,7 @@ func (h *OrderHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
 
 	order, err := h.service.GetOrderByID(r.Context(), orderID)
 	if err != nil {
-		log.Printf("error occured in getorderbyid service: %s", err.Error())	
+		log.Printf("error occured in getorderbyid service: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -125,4 +126,27 @@ func (h *OrderHandler) DeleteOrder(w http.ResponseWriter, r *http.Request) {
 	log.Printf("deleted order with id %d", orderID)
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *OrderHandler) GetOrdersByUserID(w http.ResponseWriter, r *http.Request) {
+	log.Println("received getordersbyuserid request")
+	idStr := chi.URLParam(r, "id")
+	userID, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Printf("got invalid user ID '%s'", idStr)
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	orderList, err := h.service.GetOrdersByUserID(r.Context(), userID)
+	if err != nil {
+		log.Printf("error occured in getordersbyuserid service: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("responded with orders list")
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(orderList)
 }
