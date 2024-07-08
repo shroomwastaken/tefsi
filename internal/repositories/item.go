@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 
@@ -51,6 +52,7 @@ func (r *ItemRepository) GetItemByID(ctx context.Context, id int) (*domain.Item,
 }
 
 func (r *ItemRepository) CreateItem(ctx context.Context, item *domain.Item) error {
+	log.Printf("creating item from domain: %v", *item)
 	sqlString := "INSERT INTO items (title, description, price, category) VALUES ($1, $2, $3, $4)"
 	_, err := r.db.Exec(ctx, sqlString, item.Title, item.Description, item.Price, item.CategoryID)
 	return err

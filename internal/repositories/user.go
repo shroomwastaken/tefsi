@@ -167,7 +167,7 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
 
 func (r *UserRepository) UserIsAdmin(ctx context.Context, login string) (bool, error) {
 	var isAdmin bool
-	err := r.db.QueryRow(ctx, "SELECT is_admin FROM users WHERE login = %1", login).Scan(isAdmin)
+	err := r.db.QueryRow(ctx, "SELECT is_admin FROM users WHERE login = $1", login).Scan(&isAdmin)
 	return isAdmin, err
 }
 
