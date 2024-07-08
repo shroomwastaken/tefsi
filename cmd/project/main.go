@@ -72,8 +72,9 @@ func main() {
 
 	// Настройка маршрутизатора
 	r := chi.NewRouter()
-	r.Get("/users/{id}", userHandler.GetUserByID)
+	r.Get("/users/{id}", userHandler.UserRequired(userHandler.GetUserByID))
 	r.Post("/users", userHandler.CreateUser)
+	r.Post("/users/login", userHandler.Login)
 	r.Delete("/users/delete/{id}", userHandler.DeleteUser)
 
 	categoryRepo, err := repositories.NewCategoryRepository(db, &allTables)

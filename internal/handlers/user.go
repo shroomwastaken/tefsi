@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -44,7 +45,7 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
-
+	log.Printf("getting user %d", userID)
 	user, err := h.service.GetUserByID(r.Context(), userID)
 	if err != nil {
 		log.Printf("error occured in getuserbyid service: %s", err.Error())
@@ -151,25 +152,38 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *UserHandler) UserRequired(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("entering UserRequired middleware")
 		t := r.Header.Get("Authorization")
+		if t == "" {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		t = strings.Split(t, " ")[1]
+		log.Printf("got token %s", t)
+
 		token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 			return []byte("some_secret"), nil
 		})
+
+		log.Printf("token parsed")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		log.Printf("loading payload")
 		payload, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			panic(payload)
 		}
-		err = m.service.UserExists(r.Context(), payload["login"].(string))
+		log.Printf("payload loaded")
+		err = m.service.UserExists(r.Context(), payload["sub"].(string))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		log.Printf("leaving UserRequired middleware")
 		next(w, r)
-	})
+	}
 }
