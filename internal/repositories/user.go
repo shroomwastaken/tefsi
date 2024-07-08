@@ -4,17 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jackc/pgx/v4/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 
 	"tefsi/internal/domain"
 )
 
 type UserRepository struct {
-	db pool
+	db Pool
 }
 
-func NewUserRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*UserRepository, error) {
+func NewUserRepository(db Pool, allTables *map[string]struct{}) (*UserRepository, error) {
 	_, ok := (*allTables)["users"]
 	if !ok {
 		sqlString := `CREATE TABLE users

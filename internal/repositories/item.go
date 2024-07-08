@@ -4,16 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jackc/pgx/v4/pgxpool"
-
 	"tefsi/internal/domain"
 )
 
 type ItemRepository struct {
-	db pool
+	db Pool
 }
 
-func NewItemRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*ItemRepository, error) {
+func NewItemRepository(db Pool, allTables *map[string]struct{}) (*ItemRepository, error) {
 	_, ok := (*allTables)["items"]
 
 	if !ok {

@@ -38,16 +38,98 @@ func GetAllTables(db *pgxpool.Pool) (map[string]struct{}, error) {
 	return tables, nil
 }
 
+func InitRepositories(db repositories.Pool, allTables map[string]struct{}) (*repositories.AllRepositories, error) {
+	categoryRepo, err := repositories.NewCategoryRepository(db, &allTables)
+	if err != nil {
+		return nil, err
+	}
+
+	itemRepo, err := repositories.NewItemRepository(db, &allTables)
+	if err != nil {
+		return nil, err
+	}
+
+	orderRepo, err := repositories.NewOrderRepository(db, &allTables)
+	if err != nil {
+		return nil, err
+	}
+
+	userRepo, err := repositories.NewUserRepository(db, &allTables)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &repositories.AllRepositories{
+		UserRepository:     userRepo,
+		ItemRepository:     itemRepo,
+		OrderRepository:    orderRepo,
+		CategoryRepository: categoryRepo,
+	}, nil
+}
+
+func InitServices(allRepos *repositories.AllRepositories) *services.AllServices {
+	categoryService := services.NewDefaultCategoryService(allRepos.CategoryRepository)
+	userService := services.NewDefaultUserService(allRepos.UserRepository)
+	itemService := services.NewDefaultItemService(allRepos.ItemRepository)
+	orderService := services.NewDefaultOrderService(allRepos.OrderRepository)
+
+	return &services.AllServices{
+		UserService:     userService,
+		ItemService:     itemService,
+		OrderService:    orderService,
+		CategoryService: categoryService,
+	}
+}
+
+func InitHandlers(allServices *services.AllServices) *handlers.AllHandlers {
+	categoryHandler := handlers.NewCategoryHandler(allServices.CategoryService)
+	userHandler := handlers.NewUserHandler(allServices.UserService)
+	itemHandler := handlers.NewItemHandler(allServices.ItemService)
+	orderHandler := handlers.NewOrderHandler(allServices.OrderService)
+
+	return &handlers.AllHandlers{
+		UserHandler:     userHandler,
+		ItemHandler:     itemHandler,
+		OrderHandler:    orderHandler,
+		CategoryHandler: categoryHandler,
+	}
+}
+
+func InitRouter(allHandlers *handlers.AllHandlers) chi.Router {
+	r := chi.NewRouter()
+
+	r.Get("/category/{id}", allHandlers.CategoryHandler.GetCategoryByID)
+	r.Post("/category", allHandlers.CategoryHandler.CreateCategory)
+	r.Get("/category/list", allHandlers.CategoryHandler.GetCategories)
+	r.Delete("/category/delete/{id}", allHandlers.CategoryHandler.DeleteCategory)
+
+	r.Get("/item/{id}", allHandlers.ItemHandler.GetItemByID)
+	r.Post("/item", allHandlers.ItemHandler.CreateItem)
+	r.Get("/item/list", allHandlers.ItemHandler.GetItems)
+	r.Delete("/item/delete/{id}", allHandlers.ItemHandler.DeleteItem)
+
+	r.Get("/users/{id}", allHandlers.UserHandler.UserRequired(allHandlers.UserHandler.GetUserByID))
+	r.Post("/users", allHandlers.UserHandler.CreateUser)
+	r.Post("/users/login", allHandlers.UserHandler.Login)
+	r.Delete("/users/delete/{id}", allHandlers.UserHandler.DeleteUser)
+
+	r.Get("/order/{id}", allHandlers.OrderHandler.GetOrderByID)
+	r.Post("/order", allHandlers.OrderHandler.CreateOrder)
+	r.Get("/order/list", allHandlers.UserHandler.AdminRequired(allHandlers.OrderHandler.GetOrders))
+	r.Get("/order/list/{id}", allHandlers.UserHandler.UserRequired(allHandlers.OrderHandler.GetOrdersByUserID))
+	r.Delete("/order/delete/{id}", allHandlers.OrderHandler.DeleteOrder)
+
+	return r
+}
+
 func main() {
 	postgresUser := "postgres"
 	postgresPassword := "password"
-	postgresDB := "postgres"    // Имя базы данных, которое вы хотите использовать
-	postgresHost := "localhost" // Хост базы данных
-	postgresPort := "5432"      // Порт базы данных
+	postgresDB := "postgres"
+	postgresHost := "localhost"
+	postgresPort := "5432"
 
-	// Формирование строки соединения
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", postgresUser, postgresPassword, postgresHost, postgresPort, postgresDB)
-	// Подключение к базе данных
 	db, err := pgxpool.Connect(context.Background(), dsn)
 	if err != nil {
 		log.Fatal(err)
@@ -61,62 +143,16 @@ func main() {
 	}
 	log.Println("got all tables")
 
-	r := chi.NewRouter()
-
-	categoryRepo, err := repositories.NewCategoryRepository(db, &allTables)
+	repos, err := InitRepositories(db, allTables)
 	if err != nil {
 		log.Fatal(err)
 	}
-	categoryService := services.NewDefaultCategoryService(categoryRepo)
-	categoryHandler := handlers.NewCategoryHandler(categoryService)
-	log.Println("created category repo, service and handler")
 
-	r.Get("/category/{id}", categoryHandler.GetCategoryByID)
-	r.Post("/category", categoryHandler.CreateCategory)
-	r.Get("/category/list", categoryHandler.GetCategories)
-	r.Delete("/category/delete/{id}", categoryHandler.DeleteCategory)
+	services := InitServices(repos)
+	handlers := InitHandlers(services)
 
-	itemRepo, err := repositories.NewItemRepository(db, &allTables)
-	if err != nil {
-		log.Fatal(err)
-	}
-	itemService := services.NewDefaultItemService(itemRepo)
-	itemHandler := handlers.NewItemHandler(itemService)
-	log.Println("created item repo, service and handler")
+	r := InitRouter(handlers)
 
-	r.Get("/item/{id}", itemHandler.GetItemByID)
-	r.Post("/item", itemHandler.CreateItem)
-	r.Get("/item/list", itemHandler.GetItems)
-	r.Delete("/item/delete/{id}", itemHandler.DeleteItem)
-
-	userRepo, err := repositories.NewUserRepository(db, &allTables)
-	if err != nil {
-		log.Fatal(err)
-	}
-	userService := services.NewDefaultUserService(userRepo)
-	userHandler := handlers.NewUserHandler(userService)
-	log.Println("created user repo, service and handler")
-
-	r.Get("/users/{id}", userHandler.UserRequired(userHandler.GetUserByID))
-	r.Post("/users", userHandler.CreateUser)
-	r.Post("/users/login", userHandler.Login)
-	r.Delete("/users/delete/{id}", userHandler.DeleteUser)
-
-	orderRepo, err := repositories.NewOrderRepository(db, &allTables)
-	if err != nil {
-		panic(err)
-	}
-	orderService := services.NewDefaultOrderService(orderRepo)
-	orderHandler := handlers.NewOrderHandler(orderService)
-	log.Println("created order repo, service and handler")
-
-	r.Get("/order/{id}", orderHandler.GetOrderByID)
-	r.Post("/order", orderHandler.CreateOrder)
-	r.Get("/order/list", userHandler.AdminRequired(orderHandler.GetOrders))
-	r.Get("/order/list/{id}", userHandler.UserRequired(orderHandler.GetOrdersByUserID))
-	r.Delete("/order/delete/{id}", orderHandler.DeleteOrder)
-
-	// Запуск HTTP сервера
 	log.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
