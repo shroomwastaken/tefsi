@@ -10,6 +10,6 @@ type Item struct {
 }
 
 type ItemWithAmount struct {
-	Item   Item `json:"item"`
+	Item   Item `json:"item_id"`
 	Amount int  `json:"amount"`
 }
