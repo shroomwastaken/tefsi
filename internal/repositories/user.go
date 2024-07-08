@@ -71,7 +71,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) erro
 	if err != nil {
 		return err
 	}
-	_, err = r.db.Exec(ctx, "INSERT INTO users (login, password) VALUES ($1, $2)", user.Login, user.Password)
+	_, err = r.db.Exec(ctx, "INSERT INTO users (login, password, is_admin) VALUES ($1, $2, $3)", user.Login, user.Password, user.IsAdmin)
 	return err
 }
 
@@ -122,6 +122,12 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
 	}
 
 	return nil
+}
+
+func (r *UserRepository) UserIsAdmin(ctx context.Context, login string) (bool, error) {
+	var isAdmin bool
+	err := r.db.QueryRow(ctx, "SELECT is_admin FROM users WHERE login = %1", login).Scan(isAdmin)
+	return isAdmin, err
 }
 
 func (r *UserRepository) HashPassword(password string) (string, error) {

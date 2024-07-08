@@ -113,7 +113,7 @@ func main() {
 
 	r.Get("/order/{id}", orderHandler.GetOrderByID)
 	r.Post("/order", orderHandler.CreateOrder)
-	r.Get("/order/list", orderHandler.GetOrders)
+	r.Get("/order/list", userHandler.AdminRequired(orderHandler.GetOrders))
 	r.Delete("/order/delete/{id}", orderHandler.DeleteOrder)
 
 	// Запуск HTTP сервера

@@ -23,6 +23,7 @@ type UserService interface {
 	DeleteUser(ctx context.Context, id int) error
 	CheckUserByDomain(ctx context.Context, user *domain.User) error
 	UserExists(ctx context.Context, login string) error
+	UserIsAdmin(ctx context.Context, login string) (bool, error)
 }
 
 // Обработчики HTTP запросов
@@ -67,6 +68,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	log.Printf("creating user with login = %s, password = %s, is_admin = %v", user.Login, user.Password, user.IsAdmin)
 	err = h.service.CreateUser(r.Context(), &user)
 	if err != nil {
 		log.Printf("error occured in createuser service: %s", err.Error())
@@ -154,36 +156,75 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 func (m *UserHandler) UserRequired(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("entering UserRequired middleware")
-		t := r.Header.Get("Authorization")
-		if t == "" {
-			w.WriteHeader(http.StatusForbidden)
+		login, err := getUserLoginFromJWT(r.Header.Get("Authorization"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		t = strings.Split(t, " ")[1]
-		log.Printf("got token %s", t)
 
-		token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte("some_secret"), nil
-		})
-
-		log.Printf("token parsed")
+		err = m.service.UserExists(r.Context(), login)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		log.Printf("loading payload")
-		payload, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			panic(payload)
-		}
-		log.Printf("payload loaded")
-		err = m.service.UserExists(r.Context(), payload["sub"].(string))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+
 		log.Printf("leaving UserRequired middleware")
 		next(w, r)
 	}
+}
+
+func (m *UserHandler) AdminRequired(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("entering AdminRequired middleware")
+		login, err := getUserLoginFromJWT(r.Header.Get("Authorization"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		isAdimn, err := m.service.UserIsAdmin(r.Context(), login)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if !isAdimn {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		log.Printf("leaving AdminRequired middleware")
+		next(w, r)
+	}
+}
+
+func getUserLoginFromJWT(header string) (string, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("invalid header: %s", header)
+		}
+	}()
+	if header == "" {
+		return "", fmt.Errorf("no header provided")
+	}
+	t := strings.Split(header, " ")[1]
+	log.Printf("got token %s", t)
+
+	token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte("some_secret"), nil
+	})
+
+	log.Printf("token parsed")
+	if err != nil {
+		return "", err
+	}
+	log.Printf("loading payload")
+	payload, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", fmt.Errorf("invalid token: %v", token)
+	}
+	log.Printf("payload loaded")
+	login := payload["sub"].(string)
+	return login, nil
 }

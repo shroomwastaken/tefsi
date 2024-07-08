@@ -13,6 +13,7 @@ type UserRepository interface {
 	DeleteUser(ctx context.Context, id int) error
 	CheckUserByDomain(ctx context.Context, user *domain.User) error
 	UserExists(ctx context.Context, login string) error
+	UserIsAdmin(ctx context.Context, login string) (bool, error)
 }
 
 // Реализация сервиса
@@ -46,4 +47,8 @@ func (s *UserService) CheckUserByDomain(ctx context.Context, user *domain.User) 
 
 func (s *UserService) UserExists(ctx context.Context, login string) error {
 	return s.repo.UserExists(ctx, login)
+}
+
+func (s *UserService) UserIsAdmin(ctx context.Context, login string) (bool, error) {
+	return s.repo.UserIsAdmin(ctx, login)
 }

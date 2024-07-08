@@ -155,7 +155,7 @@ func (r *OrderRepository) GetOrderByID(ctx context.Context, id int) (*domain.Ord
 func (r *OrderRepository) GetOrders(ctx context.Context) (*[]domain.Order, error) {
 	var orders []domain.Order
 
-	sqlString := "Select orders.id, orders.status, orders.user_id FROM orders"
+	sqlString := "SELECT orders.id, orders.status, orders.user_id FROM orders"
 
 	rows, err := r.db.Query(ctx, sqlString)
 	if err != nil {
