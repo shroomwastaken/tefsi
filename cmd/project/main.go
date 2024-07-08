@@ -72,8 +72,9 @@ func main() {
 
 	// Настройка маршрутизатора
 	r := chi.NewRouter()
-	r.Get("/users/{id}", userHandler.GetUserByID)
+	r.Get("/users/{id}", userHandler.UserRequired(userHandler.GetUserByID))
 	r.Post("/users", userHandler.CreateUser)
+	r.Post("/users/login", userHandler.Login)
 	r.Delete("/users/delete/{id}", userHandler.DeleteUser)
 
 	categoryRepo, err := repositories.NewCategoryRepository(db, &allTables)
@@ -112,8 +113,7 @@ func main() {
 
 	r.Get("/order/{id}", orderHandler.GetOrderByID)
 	r.Post("/order", orderHandler.CreateOrder)
-	r.Get("/order/list", orderHandler.GetOrders)
-	r.Get("/order/list/{id}", orderHandler.GetOrdersByUserID)
+	r.Get("/order/list", userHandler.AdminRequired(orderHandler.GetOrders))
 	r.Delete("/order/delete/{id}", orderHandler.DeleteOrder)
 
 	// Запуск HTTP сервера
