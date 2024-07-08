@@ -28,6 +28,23 @@ func NewUserRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*UserR
 			return nil, err
 		}
 	}
+
+	_, ok = (*allTables)["items_users"]
+	if !ok {
+		sqlString := `CREATE TABLE items_users
+        (
+            id serial primary key,
+            item int,
+            user_id int,
+            FOREIGN KEY item REFERENCES items(id),
+            FOREIGN KEY user_id REFERENCES users(id),
+        )`
+		_, err := db.Exec(context.Background(), sqlString)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &UserRepository{db: db}, nil
 }
 
