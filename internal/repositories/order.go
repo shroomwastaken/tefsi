@@ -8,7 +8,7 @@ import (
 )
 
 type OrderRepository struct {
-	db *pgxpool.Pool
+	db pool
 }
 
 func NewOrderRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*OrderRepository, error) {

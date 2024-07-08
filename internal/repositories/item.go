@@ -10,7 +10,7 @@ import (
 )
 
 type ItemRepository struct {
-	db *pgxpool.Pool
+	db pool
 }
 
 func NewItemRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*ItemRepository, error) {
