@@ -128,13 +128,13 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
 		return err
 	}
 
-	deleteItemsUsersSQL := "DELETE FROM items_users WHERE user = $1"
+	deleteItemsUsersSQL := "DELETE FROM items_users WHERE user_id = $1"
 	_, err = r.db.Exec(ctx, deleteItemsUsersSQL, id)
 	if err != nil {
 		return err
 	}
 
-	selectOrdersSQL := "SELECT id FROM orders WHERE user = $1"
+	selectOrdersSQL := "SELECT id FROM orders WHERE user_id = $1"
 	ordersRows, err := r.db.Query(ctx, selectOrdersSQL, id)
 	orderIDs := []int{}
 
@@ -148,13 +148,13 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
 		orderIDs = append(orderIDs, orderID)
 	}
 
-	deleteOrdersSQL := "DELETE FROM orders WHERE user = $1"
+	deleteOrdersSQL := "DELETE FROM orders WHERE user_id = $1"
 	_, err = r.db.Exec(ctx, deleteOrdersSQL, id)
 	if err != nil {
 		return err
 	}
 
-	deleteItemsOrdersSQL := "DELETE FROM items_orders WHERE order = $1"
+	deleteItemsOrdersSQL := "DELETE FROM items_orders WHERE order_id = $1"
 	for _, orderID := range orderIDs {
 		_, err := r.db.Exec(ctx, deleteItemsOrdersSQL, orderID)
 		if err != nil {
