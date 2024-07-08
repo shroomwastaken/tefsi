@@ -9,7 +9,7 @@ import (
 )
 
 type CategoryRepository struct {
-	db *pgxpool.Pool
+	db pool
 }
 
 func NewCategoryRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*CategoryRepository, error) {

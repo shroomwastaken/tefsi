@@ -10,9 +10,8 @@ import (
 	"tefsi/internal/domain"
 )
 
-// Реализация репозитория
 type UserRepository struct {
-	db *pgxpool.Pool
+	db pool
 }
 
 func NewUserRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*UserRepository, error) {
