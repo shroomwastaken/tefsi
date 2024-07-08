@@ -3,15 +3,13 @@ package repositories
 import (
 	"context"
 	"tefsi/internal/domain"
-
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type OrderRepository struct {
-	db pool
+	db Pool
 }
 
-func NewOrderRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*OrderRepository, error) {
+func NewOrderRepository(db Pool, allTables *map[string]struct{}) (*OrderRepository, error) {
 	_, ok := (*allTables)["statuses"]
 	if !ok {
 		sqlString := `CREATE TABLE statuses

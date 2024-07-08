@@ -3,16 +3,14 @@ package repositories
 import (
 	"context"
 
-	"github.com/jackc/pgx/v4/pgxpool"
-
 	"tefsi/internal/domain"
 )
 
 type CategoryRepository struct {
-	db pool
+	db Pool
 }
 
-func NewCategoryRepository(db *pgxpool.Pool, allTables *map[string]struct{}) (*CategoryRepository, error) {
+func NewCategoryRepository(db Pool, allTables *map[string]struct{}) (*CategoryRepository, error) {
 	_, ok := (*allTables)["categories"]
 	if !ok {
 		sqlString := `CREATE TABLE categories
