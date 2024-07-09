@@ -45,14 +45,14 @@ func InitRepositories(db repositories.Pool, allTables map[string]struct{}) (*rep
 		return nil, err
 	}
 
-	orderRepo, err := repositories.NewOrderRepository(db, &allTables)
-	if err != nil {
-		return nil, err
-	}
-
 	userRepo, err := repositories.NewUserRepository(db, &allTables)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	orderRepo, err := repositories.NewOrderRepository(db, &allTables)
+	if err != nil {
+		return nil, err
 	}
 
 	return &repositories.AllRepositories{
