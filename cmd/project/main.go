@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"tefsi/inits"
+	"tefsi/internal/inits"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 )
