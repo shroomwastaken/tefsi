@@ -1,6 +1,10 @@
 package domain
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+	"strings"
+)
 
 // TODO: filter by price
 type Filter struct {
@@ -23,7 +27,7 @@ func (f *Filter) getNonEmptyParams() []string {
 
 	if f.SearchString != "" {
 		// search matches searchString with title or description of the item
-		result = append(result, "items.title LIKE %$$$% OR items.description LIKE %$$$%")
+		result = append(result, "items.title LIKE CONCAT('%', CAST($$$ AS text), '%')")
 	}
 
 	return result
@@ -44,6 +48,13 @@ func (f *Filter) GenerateString() string {
 		if i < len(filterParams)-1 {
 			str += "AND\n"
 		}
+	}
+
+	cur := 1
+	count := strings.Count(str, "$$$")
+	for i := 0; i < count; i += 1 {
+		str = strings.Replace(str, "$$$", fmt.Sprintf("$%v", cur), 1)
+		cur += 1
 	}
 
 	return str
