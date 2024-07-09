@@ -3,7 +3,7 @@ package tests
 import (
 	"context"
 	"fmt"
-	"tefsi/inits"
+	"tefsi/internal/inits"
 	"tefsi/internal/repositories"
 
 	"github.com/docker/go-connections/nat"
@@ -56,14 +56,7 @@ func CreateContainer(dbName string) (testcontainers.Container, *pgxpool.Pool, er
 	return container, db, nil
 }
 
-func CreateRepos() (*repositories.AllRepositories, error) {
-	container, db, err := CreateContainer("test-db")
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-	defer container.Terminate(context.Background())
-
+func CreateRepos(db *pgxpool.Pool) (*repositories.AllRepositories, error) {
 	tables, err := inits.GetAllTables(db)
 	if err != nil {
 		return nil, err

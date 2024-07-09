@@ -20,7 +20,14 @@ func TestCreateContainer(t *testing.T) {
 }
 
 func TestCreateRepos(t *testing.T) {
-	_, err := CreateRepos()
+	container, db, err := CreateContainer("test-db")
+	if err != nil {
+		t.Fatal("couldnt create container:\n", err)
+	}
+	defer db.Close()
+	defer container.Terminate(context.Background())
+
+	_, err = CreateRepos(db)
 	if err != nil {
 		t.Fatal(err)
 	}
