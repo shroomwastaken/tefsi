@@ -127,13 +127,13 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
 		return err
 	}
 
-	deleteItemsUsersSQL := "DELETE FROM items_users WHERE user = $1"
+	deleteItemsUsersSQL := "DELETE FROM items_users WHERE user_id = $1"
 	_, err = r.db.Exec(ctx, deleteItemsUsersSQL, id)
 	if err != nil {
 		return err
 	}
 
-	selectOrdersSQL := "SELECT id FROM orders WHERE user = $1"
+	selectOrdersSQL := "SELECT id FROM orders WHERE user_id = $1"
 	ordersRows, err := r.db.Query(ctx, selectOrdersSQL, id)
 	orderIDs := []int{}
 
@@ -147,13 +147,13 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
 		orderIDs = append(orderIDs, orderID)
 	}
 
-	deleteOrdersSQL := "DELETE FROM orders WHERE user = $1"
+	deleteOrdersSQL := "DELETE FROM orders WHERE user_id = $1"
 	_, err = r.db.Exec(ctx, deleteOrdersSQL, id)
 	if err != nil {
 		return err
 	}
 
-	deleteItemsOrdersSQL := "DELETE FROM items_orders WHERE order = $1"
+	deleteItemsOrdersSQL := "DELETE FROM items_orders WHERE order_id = $1"
 	for _, orderID := range orderIDs {
 		_, err := r.db.Exec(ctx, deleteItemsOrdersSQL, orderID)
 		if err != nil {
@@ -166,8 +166,18 @@ func (r *UserRepository) DeleteUser(ctx context.Context, id int) error {
 
 func (r *UserRepository) UserIsAdmin(ctx context.Context, login string) (bool, error) {
 	var isAdmin bool
-	err := r.db.QueryRow(ctx, "SELECT is_admin FROM users WHERE login = %1", login).Scan(isAdmin)
+	err := r.db.QueryRow(ctx, "SELECT is_admin FROM users WHERE login = $1", login).Scan(&isAdmin)
 	return isAdmin, err
+}
+
+func (r *UserRepository) GetUserByLogin(ctx context.Context, login string) (*domain.User, error) {
+	user := &domain.User{}
+	err := r.db.QueryRow(ctx, "SELECT id, login, password, is_admin FROM users WHERE login = $1", login).
+		Scan(&user.ID, &user.Login, &user.Password, &user.IsAdmin)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (r *UserRepository) HashPassword(password string) (string, error) {
