@@ -32,6 +32,7 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	log.Println("received createorder request")
 	var order domain.Order
 	err := json.NewDecoder(r.Body).Decode(&order)
+	log.Printf("recieved order: %v", order)
 	if err != nil {
 		log.Printf("bad json received: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)

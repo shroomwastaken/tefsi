@@ -6,6 +6,4 @@ type Order struct {
 	StatusTitle string           `json:"status_title"`
 	UserID      int              `json:"user_id"`
 	Items       []ItemWithAmount `json:"items"`
-	// Items       []Item `json:"items"`
-	// Amounts     []int  `json:"amounts"`
 }

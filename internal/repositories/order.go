@@ -63,8 +63,8 @@ func NewOrderRepository(db Pool, allTables *map[string]struct{}) (*OrderReposito
 }
 
 func (r *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) error {
-	orderSQL := "INSERT INTO orders (status, user_id) VALUES ($1, $2)"
-	_, err := r.db.Exec(ctx, orderSQL, order.StatusID, order.UserID)
+	orderSQL := "INSERT INTO orders (status, user_id) VALUES ($1, $2) RETURNING id"
+	err := r.db.QueryRow(ctx, orderSQL, order.StatusID, order.UserID).Scan(&order.ID)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (r *OrderRepository) CreateOrder(ctx context.Context, order *domain.Order) 
 	itemSQL := "INSERT into items_orders (item, order_id, amount) VALUES ($1, $2, $3)"
 
 	for i := range order.Items {
-		_, err := r.db.Exec(ctx, itemSQL, order.Items[i].Item, order.ID, order.Items[i].Amount)
+		_, err := r.db.Exec(ctx, itemSQL, order.Items[i].ItemID, order.ID, order.Items[i].Amount)
 		if err != nil {
 			return err
 		}
@@ -95,10 +95,8 @@ func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *dom
 		return "", nil, err
 	}
 
-	itemsSQL := `SELECT items.id, items.title, items.description, items.price, items.category, categories.title, items_orders.amount
+	itemsSQL := `SELECT items_orders.item, items_orders.amount
     FROM items_orders
-    JOIN items ON items.id = items_orders.item
-    JOIN categories ON items.category = categories.id
     WHERE items_orders.order_id = $1`
 
 	itemsRows, err := r.db.Query(ctx, itemsSQL, order.ID)
@@ -111,7 +109,7 @@ func (r *OrderRepository) getStatusTitleAndItems(ctx context.Context, order *dom
 	for itemsRows.Next() {
 		item := domain.ItemWithAmount{}
 
-		err := itemsRows.Scan(&item.Item.ID, &item.Item.Title, &item.Item.Description, &item.Item.Price, &item.Item.CategoryID, &item.Item.CategoryTitle, &item.Amount)
+		err := itemsRows.Scan(&item.ItemID, &item.Amount)
 
 		if err != nil {
 			return "", nil, err
@@ -199,7 +197,7 @@ func (r *OrderRepository) UpdateOrder(ctx context.Context, order *domain.Order) 
 	addItemSQL := "INSERT into items_orders (item, order_id, amount) VALUES ($1, $2, $3)"
 
 	for i := range order.Items {
-		_, err := r.db.Exec(ctx, addItemSQL, order.Items[i].Item.ID, order.ID, order.Items[i].Amount)
+		_, err := r.db.Exec(ctx, addItemSQL, order.Items[i].ItemID, order.ID, order.Items[i].Amount)
 		if err != nil {
 			return err
 		}
