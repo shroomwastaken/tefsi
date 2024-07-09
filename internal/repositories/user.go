@@ -93,10 +93,8 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) erro
 
 // TODO: check that it works
 func (r *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain.ItemWithAmount, error) {
-	sqlString := `SELECT items.id, items.title, items.description, items.price, items.category, categories.title, items_users.amount
+	sqlString := `SELECT items_users.item, items_users.amount
     FROM items_users
-    JOIN items ON items.id = items_users.id
-    JOIN categories on items.category = categories.id
     WHERE items_users.user = $1`
 
 	rows, err := r.db.Query(ctx, sqlString, id)
@@ -109,7 +107,7 @@ func (r *UserRepository) GetUserCartByID(ctx context.Context, id int) (*[]domain
 	for rows.Next() {
 		item := domain.ItemWithAmount{}
 
-		err := rows.Scan(&item.Item.ID, &item.Item.Title, &item.Item.Description, &item.Item.Price, &item.Item.CategoryID, &item.Item.CategoryTitle, &item.Amount)
+		err := rows.Scan(&item.ItemID, &item.Amount)
 		if err != nil {
 			return nil, err
 		}
