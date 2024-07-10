@@ -104,15 +104,15 @@ func InitRouter(allHandlers *handlers.AllHandlers) chi.Router {
 	r.Get("/item/list", allHandlers.ItemHandler.GetItems)
 	r.Delete("/item/delete/{id}", allHandlers.ItemHandler.DeleteItem)
 
-	r.Get("/users/{id}", allHandlers.UserHandler.UserRequired(allHandlers.UserHandler.GetUserByID))
+	r.Get("/users/{id}", allHandlers.UserHandler.GetUserByID)
 	r.Post("/users", allHandlers.UserHandler.CreateUser)
 	r.Post("/users/login", allHandlers.UserHandler.Login)
 	r.Delete("/users/delete/{id}", allHandlers.UserHandler.DeleteUser)
 
 	r.Get("/order/{id}", allHandlers.OrderHandler.GetOrderByID)
 	r.Post("/order", allHandlers.OrderHandler.CreateOrder)
-	r.Get("/order/list", allHandlers.UserHandler.AdminRequired(allHandlers.OrderHandler.GetOrders))
-	r.Get("/order/list/{id}", allHandlers.UserHandler.UserRequired(allHandlers.OrderHandler.GetOrdersByUserID))
+	r.Get("/order/list", allHandlers.OrderHandler.GetOrders)
+	r.Get("/order/list/{id}", allHandlers.OrderHandler.GetOrdersByUserID)
 	r.Delete("/order/delete/{id}", allHandlers.OrderHandler.DeleteOrder)
 
 	return r
