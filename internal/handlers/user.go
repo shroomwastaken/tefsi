@@ -49,12 +49,12 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 
 	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	if !(requestUser.IsAdmin) && requestUser.ID != userID {
 		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 
 	log.Printf("getting user %d", userID)
@@ -138,6 +138,7 @@ func (h *UserHandler) GetUserCartByID(w http.ResponseWriter, r *http.Request) {
 
 	if !(requestUser.IsAdmin) && requestUser.ID != cartID {
 		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 
 	cartItems, err := h.service.GetUserCartByID(r.Context(), cartID)
@@ -171,6 +172,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	if !(requestUser.IsAdmin) && requestUser.ID != userID {
 		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 
 	err = h.service.DeleteUser(r.Context(), userID)

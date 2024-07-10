@@ -68,6 +68,17 @@ func (h *OrderHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !(requestUser.IsAdmin) && requestUser.ID != order.UserID {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	log.Printf("responded with order with id %d", order.ID)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -76,6 +87,17 @@ func (h *OrderHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
 
 func (h *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 	log.Println("received getorders request")
+
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !(requestUser.IsAdmin) {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	orderList, err := h.service.GetOrders(r.Context())
 	if err != nil {
 		log.Printf("error occured in getorders service: %s", err.Error())
@@ -90,8 +112,19 @@ func (h *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 
 func (h *OrderHandler) UpdateOrders(w http.ResponseWriter, r *http.Request) {
 	log.Println("received updateorders request")
+
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !(requestUser.IsAdmin) {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	var order domain.Order
-	err := json.NewDecoder(r.Body).Decode(&order)
+	err = json.NewDecoder(r.Body).Decode(&order)
 	if err != nil {
 		log.Printf("bad json received: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -111,6 +144,17 @@ func (h *OrderHandler) UpdateOrders(w http.ResponseWriter, r *http.Request) {
 
 func (h *OrderHandler) DeleteOrder(w http.ResponseWriter, r *http.Request) {
 	log.Println("received deleteorder request")
+
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !(requestUser.IsAdmin) {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 	orderID, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -137,6 +181,16 @@ func (h *OrderHandler) GetOrdersByUserID(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		log.Printf("got invalid user ID '%s'", idStr)
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !(requestUser.IsAdmin) && requestUser.ID != userID {
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
