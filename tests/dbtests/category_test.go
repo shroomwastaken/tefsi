@@ -84,7 +84,7 @@ func TestGetCategories(t *testing.T) {
 		t.Fatal("expected 2 categories, got", len(cats))
 	}
 
-	if !((cats[0].Title == "cat" && cats[1].Title == "car") || (cats[0].Title == "car" && cats[1].Title == "cat")) {
+	if cats[0].Title != "cat" || cats[1].Title != "car" {
 		t.Fatal("expected cat and car, got", cats[0].Title, cats[1].Title)
 	}
 }
