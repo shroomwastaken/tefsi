@@ -1,21 +1,37 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"tefsi/internal/domain"
 )
 
-func GetUserLoginFromJWT(header string) (string, error) {
+type AuthService interface {
+	GetUserByLogin(ctx context.Context, login string) (*domain.User, error)
+}
+
+type Auth struct {
+	service AuthService
+}
+
+func NewAuth(service AuthService) *Auth {
+	return &Auth{service: service}
+}
+
+func (a *Auth) GetUserFromJWT(header string) (*domain.User, error) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("invalid header: %s", header)
 		}
 	}()
+
 	if header == "" {
-		return "", fmt.Errorf("no header provided")
+		return nil, fmt.Errorf("no header provided")
 	}
 	t := strings.Split(header, " ")[1]
 	log.Printf("got token %s", t)
@@ -29,14 +45,18 @@ func GetUserLoginFromJWT(header string) (string, error) {
 
 	log.Printf("token parsed")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	log.Printf("loading payload")
 	payload, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", fmt.Errorf("invalid token: %v", token)
+		return nil, fmt.Errorf("invalid token: %v", token)
 	}
 	log.Printf("payload loaded")
 	login := payload["sub"].(string)
-	return login, nil
+	user, err := a.service.GetUserByLogin(context.Background(), login)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

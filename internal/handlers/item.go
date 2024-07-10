@@ -20,10 +20,11 @@ type ItemService interface {
 
 type ItemHandler struct {
 	service ItemService
+	auth    Auth
 }
 
-func NewItemHandler(service ItemService) *ItemHandler {
-	return &ItemHandler{service}
+func NewItemHandler(service ItemService, auth Auth) *ItemHandler {
+	return &ItemHandler{service, auth}
 }
 
 func (h *ItemHandler) CreateItem(w http.ResponseWriter, r *http.Request) {

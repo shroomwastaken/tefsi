@@ -11,7 +11,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/golang-jwt/jwt/v5"
 
-	"tefsi/internal/auth"
 	"tefsi/internal/domain"
 )
 
@@ -29,10 +28,11 @@ type UserService interface {
 // Обработчики HTTP запросов
 type UserHandler struct {
 	service UserService
+	auth    Auth
 }
 
-func NewUserHandler(service UserService) *UserHandler {
-	return &UserHandler{service: service}
+func NewUserHandler(service UserService, auth Auth) *UserHandler {
+	return &UserHandler{service: service, auth: auth}
 }
 
 func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
@@ -47,13 +47,7 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login, err := auth.GetUserLoginFromJWT(r.Header.Get("Authorization"))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	requestUser, err := h.service.GetUserByLogin(r.Context(), login)
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -136,13 +130,7 @@ func (h *UserHandler) GetUserCartByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login, err := auth.GetUserLoginFromJWT(r.Header.Get("Authorization"))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	requestUser, err := h.service.GetUserByLogin(r.Context(), login)
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -175,13 +163,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login, err := auth.GetUserLoginFromJWT(r.Header.Get("Authorization"))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	requestUser, err := h.service.GetUserByLogin(r.Context(), login)
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

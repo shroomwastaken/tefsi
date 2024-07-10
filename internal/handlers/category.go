@@ -20,10 +20,11 @@ type CategoryService interface {
 
 type CategoryHandler struct {
 	service CategoryService
+	auth    Auth
 }
 
-func NewCategoryHandler(service CategoryService) *CategoryHandler {
-	return &CategoryHandler{service}
+func NewCategoryHandler(service CategoryService, auth Auth) *CategoryHandler {
+	return &CategoryHandler{service, auth}
 }
 
 func (h *CategoryHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {

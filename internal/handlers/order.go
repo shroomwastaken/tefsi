@@ -22,10 +22,11 @@ type OrderService interface {
 
 type OrderHandler struct {
 	service OrderService
+	auth    Auth
 }
 
-func NewOrderHandler(service OrderService) *OrderHandler {
-	return &OrderHandler{service}
+func NewOrderHandler(service OrderService, auth Auth) *OrderHandler {
+	return &OrderHandler{service, auth}
 }
 
 func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
