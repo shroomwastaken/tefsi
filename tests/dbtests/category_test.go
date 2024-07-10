@@ -85,7 +85,7 @@ func TestGetCategories(t *testing.T) {
 	}
 
 	if cats[0].Title != "cat" || cats[1].Title != "car" {
-		t.Fatal("expected cat and car, got", cats[0].Title, cats[1].Title)
+		t.Fatal("expected cat and car, got", cats[0].Title, "and", cats[1].Title)
 	}
 }
 
@@ -125,7 +125,7 @@ func TestGetCategoryByID(t *testing.T) {
 	}
 
 	if *cat != cats[0] {
-		t.Fatal("expected 2 equal categories, got:", *cat, cats[0])
+		t.Fatalf("expected 2 equal categories, got: %+v and %+v", *cat, cats[0])
 	}
 }
 

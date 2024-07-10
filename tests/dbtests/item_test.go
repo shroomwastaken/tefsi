@@ -15,8 +15,6 @@ func itemEq(item1 domain.Item, item2 domain.Item) bool {
 	return item1 == item2
 }
 
-// TODO: GetItemsByID, DeleteItem
-
 func TestCreateItem(t *testing.T) {
 	container, db, err := tests.CreateContainer("test-db")
 	if err != nil {
@@ -164,40 +162,163 @@ func TestGetItems(t *testing.T) {
 		t.Fatal(err)
 	}
 	allItems, err := repos.ItemRepository.GetItems(context.Background(), &filterAll)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if len(*catItems) != 2 {
 		t.Fatal("expected 2 cat items, got", len(*catItems))
 	}
 	if !itemEq((*catItems)[0], cat1) || !itemEq((*catItems)[1], cat2) {
-		t.Fatalf("expected %v and %v, got %v and %v", cat1, cat2, (*catItems)[0], (*catItems)[1])
+		t.Fatalf("expected %+v and %+v, got %+v and %+v", cat1, cat2, (*catItems)[0], (*catItems)[1])
 	}
 
 	if len(*carItems) != 1 {
 		t.Fatal("expected 1 car item, got", len(*carItems))
 	}
 	if !itemEq((*carItems)[0], car1) {
-		t.Fatalf("expected %v, got %v", car1, (*carItems)[0])
+		t.Fatalf("expected %+v, got %+v", car1, (*carItems)[0])
 	}
 
 	if len(*oneItems) != 2 {
 		t.Fatal("expected 2 oneitems, got", len(*oneItems))
 	}
 	if !itemEq((*oneItems)[0], cat1) || !itemEq((*oneItems)[1], car1) {
-		t.Fatalf("expected %v and %v, got %v and %v", cat1, car1, (*oneItems)[0], (*oneItems)[1])
+		t.Fatalf("expected %+v and %+v, got %+v and %+v", cat1, car1, (*oneItems)[0], (*oneItems)[1])
 	}
 
 	if len(*mashinaItems) != 1 {
 		t.Fatal("expected 1 mashina item, got", len(*mashinaItems))
 	}
 	if !itemEq((*mashinaItems)[0], car1) {
-		t.Fatalf("expected %v, got %v", car1, (*mashinaItems)[0])
+		t.Fatalf("expected %+v, got %+v", car1, (*mashinaItems)[0])
 	}
 
 	if len(*allItems) != 3 {
 		t.Fatal("expected 3 items, got", len(*allItems))
 	}
-	// if (*allItems)[0] != cat1 || (*allItems)[1] != cat2 || (*allItems)[2] != car1 {
 	if !itemEq((*allItems)[0], cat1) || !itemEq((*allItems)[1], cat2) || !itemEq((*allItems)[2], car1) {
-		t.Fatalf("expected %v, %v and %v, got %v, %v and %v", cat1, cat2, car1, (*allItems)[0], (*allItems)[1], (*allItems)[2])
+		t.Fatalf("expected %+v, %+v and %+v, got %+v, %+v and %+v", cat1, cat2, car1, (*allItems)[0], (*allItems)[1], (*allItems)[2])
+	}
+}
+
+func TestGetItemByID(t *testing.T) {
+	container, db, err := tests.CreateContainer("test-db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	defer container.Terminate(context.Background())
+
+	repos, err := tests.CreateRepos(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = repos.CategoryRepository.CreateCategory(context.Background(), &domain.Category{
+		Title: "cat",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	allCats, err := repos.CategoryRepository.GetCategories(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	catID, err := categoryIDFromTitle("cat", *allCats)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	item := domain.Item{
+		Title:         "cat1",
+		Description:   "cat is cat because CATegory",
+		Price:         999,
+		CategoryID:    catID,
+		CategoryTitle: "cat",
+	}
+
+	repos.ItemRepository.CreateItem(context.Background(), &item)
+	if err != nil {
+		t.Fatal(err)
+	}
+	filterAll := domain.Filter{}
+
+	allItems, err := repos.ItemRepository.GetItems(context.Background(), &filterAll)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(*allItems) != 1 {
+		t.Fatal("expected 1 item, got", len(*allItems))
+	}
+	id := (*allItems)[0].ID
+
+	itemFromID, err := repos.ItemRepository.GetItemByID(context.Background(), id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !itemEq(item, *itemFromID) {
+		t.Fatalf("expected %+v, got %+v", item, *itemFromID)
+	}
+}
+
+func TestDeleteItem(t *testing.T) {
+	container, db, err := tests.CreateContainer("test-db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	defer container.Terminate(context.Background())
+
+	repos, err := tests.CreateRepos(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = repos.CategoryRepository.CreateCategory(context.Background(), &domain.Category{
+		Title: "cat",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	allCats, err := repos.CategoryRepository.GetCategories(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	catID, err := categoryIDFromTitle("cat", *allCats)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	item := domain.Item{
+		Title:         "cat1",
+		Description:   "cat is cat because CATegory",
+		Price:         999,
+		CategoryID:    catID,
+		CategoryTitle: "cat",
+	}
+
+	repos.ItemRepository.CreateItem(context.Background(), &item)
+	if err != nil {
+		t.Fatal(err)
+	}
+	filterAll := domain.Filter{}
+
+	allItems, err := repos.ItemRepository.GetItems(context.Background(), &filterAll)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(*allItems) != 1 {
+		t.Fatal("expected 1 item, got", len(*allItems))
+	}
+	id := (*allItems)[0].ID
+
+	err = repos.ItemRepository.DeleteItem(context.Background(), id)
+	newItems, err := repos.ItemRepository.GetItems(context.Background(), &filterAll)
+	if len(*newItems) != 0 {
+		t.Fatal("expected 0 items, got", len(*newItems))
 	}
 }
