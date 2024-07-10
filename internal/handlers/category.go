@@ -20,16 +20,27 @@ type CategoryService interface {
 
 type CategoryHandler struct {
 	service CategoryService
+	auth    Auth
 }
 
-func NewCategoryHandler(service CategoryService) *CategoryHandler {
-	return &CategoryHandler{service}
+func NewCategoryHandler(service CategoryService, auth Auth) *CategoryHandler {
+	return &CategoryHandler{service, auth}
 }
 
 func (h *CategoryHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	log.Println("received create category request")
 	var category domain.Category
-	err := json.NewDecoder(r.Body).Decode(&category)
+
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !(requestUser.IsAdmin) {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	err = json.NewDecoder(r.Body).Decode(&category)
 	if err != nil {
 		log.Printf("bad json received, %s", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -86,6 +97,17 @@ func (h *CategoryHandler) GetCategories(w http.ResponseWriter, r *http.Request) 
 
 func (h *CategoryHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	log.Println("received deletecategory request")
+
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !(requestUser.IsAdmin) {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 	categoryID, err := strconv.Atoi(idStr)
 	if err != nil {

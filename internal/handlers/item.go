@@ -20,16 +20,28 @@ type ItemService interface {
 
 type ItemHandler struct {
 	service ItemService
+	auth    Auth
 }
 
-func NewItemHandler(service ItemService) *ItemHandler {
-	return &ItemHandler{service}
+func NewItemHandler(service ItemService, auth Auth) *ItemHandler {
+	return &ItemHandler{service, auth}
 }
 
 func (h *ItemHandler) CreateItem(w http.ResponseWriter, r *http.Request) {
 	log.Println("received createitem request")
+
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !(requestUser.IsAdmin) {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	var item domain.Item
-	err := json.NewDecoder(r.Body).Decode(&item)
+	err = json.NewDecoder(r.Body).Decode(&item)
 	if err != nil {
 		log.Printf("bad json received, %s", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -105,6 +117,17 @@ func (h *ItemHandler) GetItems(w http.ResponseWriter, r *http.Request) {
 
 func (h *ItemHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 	log.Println("received deleteitem request")
+
+	requestUser, err := h.auth.GetUserFromJWT(r.Header.Get("Authorization"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !(requestUser.IsAdmin) {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 	itemID, err := strconv.Atoi(idStr)
 	if err != nil {

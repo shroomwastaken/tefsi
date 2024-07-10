@@ -3,6 +3,7 @@ package inits
 import (
 	"context"
 	"log"
+	"tefsi/internal/auth"
 	"tefsi/internal/handlers"
 	"tefsi/internal/repositories"
 	"tefsi/internal/services"
@@ -64,12 +65,14 @@ func InitRepositories(db repositories.Pool, allTables map[string]struct{}) (*rep
 }
 
 func InitServices(allRepos *repositories.AllRepositories) *services.AllServices {
+	authService := services.NewDefaultAuthService(allRepos.UserRepository)
 	categoryService := services.NewDefaultCategoryService(allRepos.CategoryRepository)
 	userService := services.NewDefaultUserService(allRepos.UserRepository)
 	itemService := services.NewDefaultItemService(allRepos.ItemRepository)
 	orderService := services.NewDefaultOrderService(allRepos.OrderRepository)
 
 	return &services.AllServices{
+		AuthService:     authService,
 		UserService:     userService,
 		ItemService:     itemService,
 		OrderService:    orderService,
@@ -78,10 +81,11 @@ func InitServices(allRepos *repositories.AllRepositories) *services.AllServices 
 }
 
 func InitHandlers(allServices *services.AllServices) *handlers.AllHandlers {
-	categoryHandler := handlers.NewCategoryHandler(allServices.CategoryService)
-	userHandler := handlers.NewUserHandler(allServices.UserService)
-	itemHandler := handlers.NewItemHandler(allServices.ItemService)
-	orderHandler := handlers.NewOrderHandler(allServices.OrderService)
+	auth := auth.NewAuth(allServices.AuthService)
+	categoryHandler := handlers.NewCategoryHandler(allServices.CategoryService, auth)
+	userHandler := handlers.NewUserHandler(allServices.UserService, auth)
+	itemHandler := handlers.NewItemHandler(allServices.ItemService, auth)
+	orderHandler := handlers.NewOrderHandler(allServices.OrderService, auth)
 
 	return &handlers.AllHandlers{
 		UserHandler:     userHandler,
@@ -104,15 +108,15 @@ func InitRouter(allHandlers *handlers.AllHandlers) chi.Router {
 	r.Get("/item/list", allHandlers.ItemHandler.GetItems)
 	r.Delete("/item/delete/{id}", allHandlers.ItemHandler.DeleteItem)
 
-	r.Get("/users/{id}", allHandlers.UserHandler.UserRequired(allHandlers.UserHandler.GetUserByID))
+	r.Get("/users/{id}", allHandlers.UserHandler.GetUserByID)
 	r.Post("/users", allHandlers.UserHandler.CreateUser)
 	r.Post("/users/login", allHandlers.UserHandler.Login)
 	r.Delete("/users/delete/{id}", allHandlers.UserHandler.DeleteUser)
 
 	r.Get("/order/{id}", allHandlers.OrderHandler.GetOrderByID)
 	r.Post("/order", allHandlers.OrderHandler.CreateOrder)
-	r.Get("/order/list", allHandlers.UserHandler.AdminRequired(allHandlers.OrderHandler.GetOrders))
-	r.Get("/order/list/{id}", allHandlers.UserHandler.UserRequired(allHandlers.OrderHandler.GetOrdersByUserID))
+	r.Get("/order/list", allHandlers.OrderHandler.GetOrders)
+	r.Get("/order/list/{id}", allHandlers.OrderHandler.GetOrdersByUserID)
 	r.Delete("/order/delete/{id}", allHandlers.OrderHandler.DeleteOrder)
 
 	return r
