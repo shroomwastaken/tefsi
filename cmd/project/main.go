@@ -2,23 +2,16 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"tefsi/internal/inits"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 func main() {
-	postgresUser := "postgres"
-	postgresPassword := "password"
-	postgresDB := "postgres"
-	postgresHost := "localhost"
-	postgresPort := "5432"
-
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", postgresUser, postgresPassword, postgresHost, postgresPort, postgresDB)
-	db, err := pgxpool.Connect(context.Background(), dsn)
+	db, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}
